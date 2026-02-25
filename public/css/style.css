@@ -1,0 +1,46 @@
+.card-hover {
+    transition: all 0.2s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
+}
+
+.toggle-group {
+    display: flex;
+    width: 100%;
+    background-color: #f1f1f1;
+    border-radius: 20px;
+    padding: 4px;
+}
+.toggle-group input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.toggle-option {
+    flex: 1;
+    text-align: center;
+    padding: 10px 0;
+    cursor: pointer;
+    border-radius: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    color: #555;
+}
+
+.toggle-option.income,
+.toggle-option.expense {
+    background-color: transparent;
+}
+
+.toggle-group input[type="radio"]:checked + .toggle-option.income {
+    background-color: #d4f4dd;
+    color: #28a745;
+}
+
+.toggle-group input[type="radio"]:checked + .toggle-option.expense {
+    background-color: #f8d7da;
+    color: #dc3545;
+}
