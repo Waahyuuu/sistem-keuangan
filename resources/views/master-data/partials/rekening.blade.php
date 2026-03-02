@@ -35,56 +35,52 @@
     </button>
 </div>
 
-
-<div class="row">
-
+<div class="grid">
     @forelse($rekenings as $rek)
-    <div class="col-md-4 mb-4">
-        <div class="card bg-light border-0 shadow-sm rounded-4 card-hover">
-            <div class="card-body">
+    <div class="card bg-light border-0 shadow-sm rounded-4 card-hover">
+        <div class="card-body">
 
-                <h5 class="fw-bold mb-1">
-                    {{ $rek->name_rek }}
-                </h5>
+            <h5 class="fw-bold mb-1">
+                {{ $rek->name_rek }}
+            </h5>
 
-                <p class="mb-4">
-                    <small>{{ $rek->no_rek }}</small>
-                </p>
+            <p class="mb-4">
+                <small>{{ $rek->no_rek }}</small>
+            </p>
 
-                <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center">
 
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="form-check form-switch m-0">
-                            <input class="form-check-input toggle-rekening" type="checkbox" data-id="{{ $rek->id }}" {{
-                                $rek->is_active ? 'checked' : '' }}>
-                        </div>
-
-                        <small class="status-text {{ $rek->is_active ? 'text-success' : 'text-muted' }}">
-                            {{ $rek->is_active ? 'Aktif' : 'Nonaktif' }}
-                        </small>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="form-check form-switch m-0">
+                        <input class="form-check-input toggle-rekening" type="checkbox" data-id="{{ $rek->id }}" {{
+                            $rek->is_active ? 'checked' : '' }}>
                     </div>
 
-                    <div class="d-flex gap-2">
+                    <small class="status-text {{ $rek->is_active ? 'text-success' : 'text-muted' }}">
+                        {{ $rek->is_active ? 'Aktif' : 'Nonaktif' }}
+                    </small>
+                </div>
 
-                        <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal"
-                            data-bs-target="#modalEdit{{ $rek->id }}">
-                            Edit
+                <div class="d-flex gap-2">
+
+                    <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal"
+                        data-bs-target="#modalEdit{{ $rek->id }}">
+                        Edit
+                    </button>
+
+                    <form action="{{ route('rekening.delete', $rek->id) }}" method="POST"
+                        onsubmit="return confirm('Yakin hapus rekening ini?')">
+                        @csrf
+                        @method('DELETE')
+                        <button class="btn btn-sm btn-outline-danger">
+                            Hapus
                         </button>
-
-                        <form action="{{ route('rekening.delete', $rek->id) }}" method="POST"
-                            onsubmit="return confirm('Yakin hapus rekening ini?')">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-sm btn-outline-danger">
-                                Hapus
-                            </button>
-                        </form>
-
-                    </div>
+                    </form>
 
                 </div>
 
             </div>
+
         </div>
     </div>
     @empty

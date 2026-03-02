@@ -35,58 +35,55 @@
     </button>
 </div>
 
-<div class="row">
-
+<div class="grid">
     @forelse($programs as $prog)
-    <div class="col-md-4 mb-4">
-        <div class="card bg-light border-0 shadow-sm rounded-4 card-hover">
-            <div class="card-body">
+    <div class="card bg-light border-0 shadow-sm rounded-4 card-hover">
+        <div class="card-body">
 
-                <h5 class="fw-bold mb-1">
-                    {{ $prog->name_prog }}
-                </h5>
+            <h5 class="fw-bold mb-1">
+                {{ $prog->name_prog }}
+            </h5>
 
-                <p class="mb-2">
-                    @if($prog->departemen->parent)
+            <p class="mb-2">
+                @if($prog->departemen->parent)
 
-                    <span class="badge bg-primary">
-                        {{ $prog->departemen->parent->name_dep }}
-                    </span>
+                <span class="badge bg-primary">
+                    {{ $prog->departemen->parent->name_dep }}
+                </span>
 
-                    <i class="bi bi-arrow-right mx-1"></i>
+                <i class="bi bi-arrow-right mx-1"></i>
 
-                    <span class="badge bg-secondary">
-                        Sub: {{ $prog->departemen->name_dep }}
-                    </span>
+                <span class="badge bg-secondary">
+                    Sub: {{ $prog->departemen->name_dep }}
+                </span>
 
-                    @else
+                @else
 
-                    <span class="badge bg-primary">
-                        {{ $prog->departemen->name_dep }}
-                    </span>
+                <span class="badge bg-primary">
+                    {{ $prog->departemen->name_dep }}
+                </span>
 
-                    @endif
-                </p>
+                @endif
+            </p>
 
-                <div class="d-flex justify-content-end gap-2 mt-3">
+            <div class="d-flex justify-content-end gap-2 mt-3">
 
-                    <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal"
-                        data-bs-target="#modalEditProgram{{ $prog->id }}">
-                        Edit
+                <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal"
+                    data-bs-target="#modalEditProgram{{ $prog->id }}">
+                    Edit
+                </button>
+
+                <form action="{{ route('program.delete', $prog->id) }}" method="POST"
+                    onsubmit="return confirm('Yakin hapus program ini?')">
+                    @csrf
+                    @method('DELETE')
+                    <button class="btn btn-sm btn-outline-danger">
+                        Hapus
                     </button>
-
-                    <form action="{{ route('program.delete', $prog->id) }}" method="POST"
-                        onsubmit="return confirm('Yakin hapus program ini?')">
-                        @csrf
-                        @method('DELETE')
-                        <button class="btn btn-sm btn-outline-danger">
-                            Hapus
-                        </button>
-                    </form>
-
-                </div>
+                </form>
 
             </div>
+
         </div>
     </div>
     @empty

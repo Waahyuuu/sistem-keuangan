@@ -158,12 +158,13 @@ Route::middleware('auth')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | TRANSAKSI (BELUM DIPAKAI SEKARANG)
+    | TRANSAKSI
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/transaksi', [TransaksiController::class, 'index'])
-        ->name('transaksi');
+    Route::get('/transaksi', [TransaksiController::class, 'index'])->name('transaksi.index');
+    Route::post('/transaksi', [TransaksiController::class, 'store'])->name('transaksi.store');
+    Route::get('/transaksi/{transaksi}', [TransaksiController::class, 'show'])->name('transaksi.show');
 
     /*
     |--------------------------------------------------------------------------

@@ -9,6 +9,7 @@ use App\Models\Departemen;
 use App\Models\Program;
 use App\Models\Kategori;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class MasterDataController extends Controller
 {
@@ -243,6 +244,12 @@ class MasterDataController extends Controller
 
     public function storeDepartemen(Request $request)
     {
+        $slug = Str::slug($request->name_dep);
+
+        $request->merge([
+            'slug' => $slug
+        ]);
+
         $request->validate([
             'name_dep' => [
                 'required',
@@ -252,17 +259,19 @@ class MasterDataController extends Controller
                             ->whereNull('parent_id');
                     }),
             ],
+            'slug' => 'unique:departemens,slug',
             'kantor_id' => 'required|exists:kantors,id',
         ], [
             'name_dep.required' => 'Nama departemen wajib diisi.',
             'name_dep.unique' => 'Nama departemen sudah digunakan di kantor ini.',
-            'kantor_id.required' => 'Kantor wajib dipilih.',
+            'slug.unique' => 'Nama departemen sudah digunakan di kantor lain.',
         ]);
 
         Departemen::create([
             'name_dep' => $request->name_dep,
             'kantor_id' => $request->kantor_id,
-            'parent_id' => null
+            'parent_id' => null,
+            'slug' => $slug
         ]);
 
         return back()->with('success', 'Departemen berhasil ditambahkan');
@@ -474,16 +483,18 @@ class MasterDataController extends Controller
         $request->validate([
             'name_ktgr' => [
                 'required',
-                Rule::unique('kategoris')->where(function ($query) use ($request) {
-                    return $query->where('program_id', $request->program_id);
-                }),
+                Rule::unique('kategoris')
+                    ->where(function ($query) use ($request) {
+                        return $query->where('program_id', $request->program_id)
+                            ->where('type_ktgr', $request->type_ktgr);
+                    }),
             ],
             'type_ktgr' => 'required|in:pemasukan,pengeluaran',
             'program_id' => 'required|exists:programs,id',
             'color_ktgr' => 'nullable|string|max:7',
         ], [
             'name_ktgr.required' => 'Nama kategori wajib diisi.',
-            'name_ktgr.unique' => 'Nama kategori sudah digunakan di program ini.',
+            'name_ktgr.unique' => 'Nama kategori dengan tipe ini sudah digunakan di program tersebut.',
             'type_ktgr.required' => 'Tipe kategori wajib dipilih.',
             'program_id.required' => 'Program wajib dipilih.',
         ]);
@@ -503,16 +514,19 @@ class MasterDataController extends Controller
         $request->validate([
             'name_ktgr' => [
                 'required',
-                Rule::unique('kategoris')->where(function ($query) use ($request) {
-                    return $query->where('program_id', $request->program_id);
-                })->ignore($kategori->id),
+                Rule::unique('kategoris')
+                    ->where(function ($query) use ($request) {
+                        return $query->where('program_id', $request->program_id)
+                            ->where('type_ktgr', $request->type_ktgr);
+                    })
+                    ->ignore($kategori->id),
             ],
             'type_ktgr' => 'required|in:pemasukan,pengeluaran',
             'program_id' => 'required|exists:programs,id',
             'color_ktgr' => 'nullable|string|max:7',
         ], [
             'name_ktgr.required' => 'Nama kategori wajib diisi.',
-            'name_ktgr.unique' => 'Nama kategori sudah digunakan di program ini.',
+            'name_ktgr.unique' => 'Nama kategori dengan tipe ini sudah digunakan di program tersebut.',
             'type_ktgr.required' => 'Tipe kategori wajib dipilih.',
             'program_id.required' => 'Program wajib dipilih.',
         ]);

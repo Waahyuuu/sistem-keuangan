@@ -21,9 +21,11 @@ return new class extends Migration
             $table->foreignId('program_id')
                 ->constrained('programs')
                 ->cascadeOnDelete();
-                
+
             $table->timestamps();
+            
             $table->index('program_id');
+            $table->unique(['name_ktgr', 'program_id', 'type_ktgr'], 'kategoris_unique_combo');
         });
     }
 

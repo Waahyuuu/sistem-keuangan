@@ -44,3 +44,33 @@
     background-color: #f8d7da;
     color: #dc3545;
 }
+
+.content-wrapper {
+    max-width: 1200px;
+    margin: auto;
+}
+
+body {
+    overflow-x: hidden;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+/* responsive */
+/* Tablet */
+@media (max-width: 992px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* HP */
+@media (max-width: 576px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}

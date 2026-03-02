@@ -148,4 +148,64 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     });
+
+    // auto logout
+    const autoLogoutTime = 7200000;
+
+    setTimeout(function () {
+        alert("Sesi anda telah habis (2 jam). Silakan login kembali.");
+        document.getElementById("logout-form").submit();
+    }, autoLogoutTime);
+
+    // detail transaksi
+    document.querySelectorAll(".detail-btn").forEach((btn) => {
+        btn.addEventListener("click", function () {
+            const id = this.dataset.id;
+            const modalBody = document.querySelector(
+                "#modalDetailTransaksi .modal-body",
+            );
+
+            modalBody.innerHTML = "Loading...";
+
+            fetch(`/transaksi/${id}`)
+                .then((response) => {
+                    if (response.status === 403) {
+                        throw new Error("403");
+                    }
+
+                    if (!response.ok) {
+                        throw new Error("HTTP " + response.status);
+                    }
+
+                    return response.text();
+                })
+                .then((html) => {
+                    modalBody.innerHTML = html;
+                })
+                .catch((error) => {
+                    if (error.message === "403") {
+                        modalBody.innerHTML =
+                            '<div class="text-danger">Akses ditolak</div>';
+                    } else {
+                        modalBody.innerHTML =
+                            '<div class="text-danger">Gagal memuat detail</div>';
+                    }
+                });
+        });
+    });
+
+    // rekening
+    const asal = document.getElementById("rekeningAsal");
+    const tujuan = document.getElementById("rekeningTujuan");
+
+    asal.addEventListener("change", function () {
+        Array.from(tujuan.options).forEach((option) => {
+            option.disabled = false;
+        });
+
+        if (this.value !== "") {
+            tujuan.querySelector(`option[value="${this.value}"]`).disabled =
+                true;
+        }
+    });
 });

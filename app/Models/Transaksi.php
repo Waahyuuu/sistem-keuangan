@@ -37,7 +37,7 @@ class Transaksi extends Model
 
     protected $casts = [
         'nominal_transaksi' => 'decimal:2',
-        'tgl_transaksi'     => 'date'
+        'tgl_transaksi'     => 'datetime'
     ];
 
     /*
