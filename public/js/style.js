@@ -1,9 +1,13 @@
 document.addEventListener("DOMContentLoaded", function () {
-    // CSRF (Penting)
+    /* ===========================
+       CSRF
+    ============================ */
     const meta = document.querySelector('meta[name="csrf-token"]');
     const token = meta ? meta.getAttribute("content") : null;
 
-    // toogle
+    /* ===========================
+       TOGGLE REKENING
+    ============================ */
     document.querySelectorAll(".toggle-rekening").forEach((toggle) => {
         toggle.addEventListener("change", function () {
             let id = this.dataset.id;
@@ -36,128 +40,140 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 })
                 .catch(() => {
-                    // kalau gagal, balikin toggle
                     checkbox.checked = !checkbox.checked;
                     alert("Terjadi kesalahan!");
                 });
         });
     });
 
-    // toast
-    const toastElList = document.querySelectorAll(".show-auto");
-
-    toastElList.forEach(function (toastEl) {
-        const toast = new bootstrap.Toast(toastEl, {
-            delay: 2000,
-        });
+    /* ===========================
+       TOAST
+    ============================ */
+    document.querySelectorAll(".show-auto").forEach(function (toastEl) {
+        const toast = new bootstrap.Toast(toastEl, { delay: 2000 });
         toast.show();
     });
 
-    // departemen (khusus)
+    /* ===========================
+   TAMBAH PROGRAM
+============================ */
     const parentSelect = document.getElementById("departemenSelect");
     const subSelect = document.getElementById("subDepartemenSelect");
     const subWrapper = document.getElementById("subWrapper");
+    const hiddenInput = document.getElementById("hiddenDepartemenId");
 
-    if (parentSelect && subSelect && subWrapper) {
+    if (parentSelect && subSelect && hiddenInput) {
         parentSelect.addEventListener("change", function () {
             const parentId = this.value;
-
-            subSelect.innerHTML =
-                '<option value="">-- Pilih Sub Departemen --</option>';
+            subSelect.innerHTML = "";
+            hiddenInput.value = parentId; // default kirim parent
 
             if (!parentId) {
                 subWrapper.style.display = "none";
-                subSelect.removeAttribute("required");
                 return;
             }
 
-            const parent = window.departemensData.find((d) => d.id == parentId);
+            const parent = window.departemensData?.find(
+                (d) => d.id == parentId,
+            );
 
-            if (parent && parent.children && parent.children.length > 0) {
+            if (parent && parent.children.length > 0) {
                 subWrapper.style.display = "block";
 
+                subSelect.innerHTML =
+                    '<option value="">-- Pilih Sub Departemen --</option>';
+
                 parent.children.forEach((sub) => {
-                    subSelect.innerHTML += `
-                    <option value="${sub.id}">
-                        ${sub.name_dep}
-                    </option>
-                `;
+                    subSelect.innerHTML += `<option value="${sub.id}">${sub.name_dep}</option>`;
                 });
             } else {
                 subWrapper.style.display = "none";
-
-                subSelect.innerHTML = `<option value="${parentId}" selected></option>`;
             }
         });
 
-        parentSelect.dispatchEvent(new Event("change"));
+        subSelect.addEventListener("change", function () {
+            hiddenInput.value = this.value; // override kalau pilih sub
+        });
     }
 
-    // edit departemen (khusus)
+    /* ===========================
+   EDIT PROGRAM
+============================ */
     document.querySelectorAll(".edit-departemen").forEach((select) => {
         const subTargetId = select.dataset.target;
-        const selectedDepartemenId = select.dataset.selected; // ambil dari data attribute
+        const hiddenId = select.dataset.hidden;
+        const selectedId = select.dataset.selected;
+
         const subSelect = document.getElementById(subTargetId);
+        const hiddenInput = document.getElementById(hiddenId);
         const wrapper = document.getElementById(
             "subWrapperEdit" + subTargetId.replace("subEdit", ""),
         );
 
-        select.addEventListener("change", function () {
-            const parentId = this.value;
-
+        function loadSub(parentId) {
+            hiddenInput.value = parentId; // default kirim parent
             subSelect.innerHTML = "";
 
             const parent = window.departemensData.find((d) => d.id == parentId);
 
-            if (parent && parent.children && parent.children.length > 0) {
+            if (parent && parent.children.length > 0) {
                 wrapper.style.display = "block";
 
+                subSelect.innerHTML =
+                    '<option value="">-- Pilih Sub Departemen --</option>';
+
                 parent.children.forEach((sub) => {
-                    const selected =
-                        sub.id == selectedDepartemenId ? "selected" : "";
+                    const isSelected = sub.id == selectedId ? "selected" : "";
 
                     subSelect.innerHTML += `
-                    <option value="${sub.id}" ${selected}>
+                    <option value="${sub.id}" ${isSelected}>
                         ${sub.name_dep}
                     </option>
                 `;
                 });
             } else {
                 wrapper.style.display = "none";
-
-                subSelect.innerHTML = `
-                <option value="${parentId}" selected></option>
-            `;
             }
+        }
+
+        // Saat parent berubah
+        select.addEventListener("change", function () {
+            loadSub(this.value);
         });
 
-        // trigger saat modal load
-        select.dispatchEvent(new Event("change"));
+        // Saat sub berubah
+        subSelect.addEventListener("change", function () {
+            hiddenInput.value = this.value;
+        });
+
+        // Trigger awal supaya saat modal dibuka langsung benar
+        loadSub(select.value);
     });
 
-    // reset modal jika dicancel
+    /* ===========================
+       RESET MODAL
+    ============================ */
     document.querySelectorAll(".modal").forEach((modal) => {
         modal.addEventListener("hidden.bs.modal", function () {
-            const forms = modal.querySelectorAll("form");
-            forms.forEach((form) => form.reset());
+            const form = modal.querySelector("form");
+            if (form) form.reset();
 
-            // Kalau ada dropdown departemen edit, trigger ulang
-            const parentSelect = modal.querySelector(".edit-departemen");
-            if (parentSelect) {
-                parentSelect.dispatchEvent(new Event("change"));
-            }
+            const select = modal.querySelector(".edit-departemen");
+            if (select) select.dispatchEvent(new Event("change"));
         });
     });
 
-    // auto logout
-    const autoLogoutTime = 7200000;
-
+    /* ===========================
+       AUTO LOGOUT (2 JAM)
+    ============================ */
     setTimeout(function () {
         alert("Sesi anda telah habis (2 jam). Silakan login kembali.");
-        document.getElementById("logout-form").submit();
-    }, autoLogoutTime);
+        document.getElementById("logout-form")?.submit();
+    }, 7200000);
 
-    // detail transaksi
+    /* ===========================
+       DETAIL TRANSAKSI
+    ============================ */
     document.querySelectorAll(".detail-btn").forEach((btn) => {
         btn.addEventListener("click", function () {
             const id = this.dataset.id;
@@ -169,43 +185,41 @@ document.addEventListener("DOMContentLoaded", function () {
 
             fetch(`/transaksi/${id}`)
                 .then((response) => {
-                    if (response.status === 403) {
-                        throw new Error("403");
-                    }
-
-                    if (!response.ok) {
+                    if (response.status === 403) throw new Error("403");
+                    if (!response.ok)
                         throw new Error("HTTP " + response.status);
-                    }
-
                     return response.text();
                 })
                 .then((html) => {
                     modalBody.innerHTML = html;
                 })
                 .catch((error) => {
-                    if (error.message === "403") {
-                        modalBody.innerHTML =
-                            '<div class="text-danger">Akses ditolak</div>';
-                    } else {
-                        modalBody.innerHTML =
-                            '<div class="text-danger">Gagal memuat detail</div>';
-                    }
+                    modalBody.innerHTML =
+                        error.message === "403"
+                            ? '<div class="text-danger">Akses ditolak</div>'
+                            : '<div class="text-danger">Gagal memuat detail</div>';
                 });
         });
     });
 
-    // rekening
+    /* ===========================
+       FILTER REKENING ASAL-TUJUAN
+    ============================ */
     const asal = document.getElementById("rekeningAsal");
     const tujuan = document.getElementById("rekeningTujuan");
 
-    asal.addEventListener("change", function () {
-        Array.from(tujuan.options).forEach((option) => {
-            option.disabled = false;
-        });
+    if (asal && tujuan) {
+        asal.addEventListener("change", function () {
+            Array.from(tujuan.options).forEach((option) => {
+                option.disabled = false;
+            });
 
-        if (this.value !== "") {
-            tujuan.querySelector(`option[value="${this.value}"]`).disabled =
-                true;
-        }
-    });
+            if (this.value !== "") {
+                const option = tujuan.querySelector(
+                    `option[value="${this.value}"]`,
+                );
+                if (option) option.disabled = true;
+            }
+        });
+    }
 });

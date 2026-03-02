@@ -1,3 +1,4 @@
+@php use Illuminate\Support\Str; @endphp
 <div class="container-fluid">
 
     <div class="mb-3 text-center">
@@ -69,5 +70,24 @@
             {{ $transaksi->tgl_transaksi->format('d M Y') }}
         </div>
     </div>
+
+    @if($transaksi->bukti_nota)
+    <hr>
+    <div class="row">
+        <div class="col-12 text-center">
+            <label class="fw-semibold">Bukti Nota</label><br>
+
+            @if(Str::endsWith($transaksi->bukti_nota, '.pdf'))
+            <a href="{{ asset('storage/'.$transaksi->bukti_nota) }}" target="_blank"
+                class="btn btn-outline-primary mt-2">
+                Lihat PDF
+            </a>
+            @else
+            <img src="{{ asset('storage/'.$transaksi->bukti_nota) }}" class="img-fluid rounded shadow mt-2"
+                style="max-height:300px;">
+            @endif
+        </div>
+    </div>
+    @endif
 
 </div>

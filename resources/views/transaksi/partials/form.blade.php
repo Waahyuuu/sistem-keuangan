@@ -41,14 +41,16 @@ $departemensList = $departemensUser ?? [];
 
 <div class="mb-3">
     <label class="form-label">Kategori</label>
-    <select name="kategori_id" class="form-select">
-        <option value="">-- Pilih Kategori --</option>
+    <select name="kategori_id[]" class="form-select" multiple>
         @foreach($kategoris as $ktgr)
         <option value="{{ $ktgr->id }}">
             {{ $ktgr->name_ktgr }}
         </option>
         @endforeach
     </select>
+    <small class="text-muted">
+        Bisa pilih lebih dari 1 kategori (Ctrl / Cmd + Klik)
+    </small>
 </div>
 
 <div class="mb-3">
@@ -59,4 +61,12 @@ $departemensList = $departemensUser ?? [];
 <div class="mb-3">
     <label class="form-label">Keterangan</label>
     <textarea name="keterangan" class="form-control" rows="3"></textarea>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Upload Bukti Nota</label>
+    <input type="file" name="bukti_nota" class="form-control" accept="image/*,.pdf">
+    <small class="text-muted">
+        Format: JPG, PNG, PDF (Max 2MB)
+    </small>
 </div>

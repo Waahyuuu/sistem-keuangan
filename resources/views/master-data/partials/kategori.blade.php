@@ -57,12 +57,6 @@
 
             </div>
 
-            <div class="mt-2">
-                <span class="badge bg-info text-white">
-                    Program: {{ $ktgr->program->name_prog ?? '-' }}
-                </span>
-            </div>
-
             <div class="d-flex justify-content-end gap-2 mt-3">
                 <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal"
                     data-bs-target="#modalEditKategori{{ $ktgr->id }}">
@@ -127,16 +121,6 @@
                         <input type="color" name="color_ktgr" class="form-control form-control-color" value="#0d6efd">
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Program</label>
-                        <select name="program_id" class="form-select" required>
-                            <option value="">-- Pilih Program --</option>
-                            @foreach($programs as $prog)
-                            <option value="{{ $prog->id }}">{{ $prog->name_prog }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
                 </div>
 
                 <div class="modal-footer">
@@ -195,17 +179,6 @@
                         <label class="form-label">Warna Badge</label>
                         <input type="color" name="color_ktgr" class="form-control form-control-color"
                             value="{{ $ktgr->color_ktgr ?? '#0d6efd' }}">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Program</label>
-                        <select name="program_id" class="form-select" required>
-                            @foreach($programs as $prog)
-                            <option value="{{ $prog->id }}" {{ $ktgr->program_id == $prog->id ? 'selected' : '' }}>
-                                {{ $prog->name_prog }}
-                            </option>
-                            @endforeach
-                        </select>
                     </div>
 
                 </div>

@@ -9,17 +9,13 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
-        Schema::create('kategoris', function (Blueprint $table) {
+        Schema::create('kategori_transaksi', function (Blueprint $table) {
             $table->id();
-            $table->string('name_ktgr');
-            $table->enum('type_ktgr', ['pemasukan', 'pengeluaran']);
-            $table->string('color_ktgr', 7)->nullable();
-
+            $table->foreignId('transaksi_id')->constrained()->onDelete('cascade');
+            $table->foreignId('kategori_id')->constrained()->onDelete('cascade');
             $table->timestamps();
-
-            $table->unique(['name_ktgr', 'type_ktgr'], 'kategoris_unique_combo');
         });
     }
 
@@ -28,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('kategoris');
+        Schema::dropIfExists('kategori_transaksi');
     }
 };

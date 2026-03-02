@@ -126,7 +126,7 @@
 
                     {{-- Pemasukan --}}
                     <div class="tab-pane fade show active" id="pemasukan">
-                        <form method="POST" action="{{ route('transaksi.store') }}">
+                        <form method="POST" action="{{ route('transaksi.store') }}" enctype="multipart/form-data">
                             @csrf
                             <input type="hidden" name="type_transaksi" value="pemasukan">
                             @include('transaksi.partials.form')
@@ -136,7 +136,7 @@
 
                     {{-- Pengeluaran --}}
                     <div class="tab-pane fade" id="pengeluaran">
-                        <form method="POST" action="{{ route('transaksi.store') }}">
+                        <form method="POST" action="{{ route('transaksi.store') }}" enctype="multipart/form-data">
                             @csrf
                             <input type="hidden" name="type_transaksi" value="pengeluaran">
                             @include('transaksi.partials.form')

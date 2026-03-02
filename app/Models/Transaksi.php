@@ -32,7 +32,6 @@ class Transaksi extends Model
         'rekening_tujuan_id',
         'departemen_id',
         'program_id',
-        'kategori_id'
     ];
 
     protected $casts = [
@@ -71,9 +70,9 @@ class Transaksi extends Model
         return $this->belongsTo(Program::class);
     }
 
-    public function kategori()
+    public function kategoris()
     {
-        return $this->belongsTo(Kategori::class);
+        return $this->belongsToMany(Kategori::class, 'kategori_transaksi');
     }
 
     /*

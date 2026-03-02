@@ -4,39 +4,37 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Transaksi;
 use App\Models\Rekening;
 use App\Models\Departemen;
 use App\Models\Program;
 use App\Models\Kategori;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 
 class TransaksiController extends Controller
 {
     public function index()
     {
-        $query = Transaksi::with(['departemen', 'program', 'kategori', 'rekening']);
+        $query = Transaksi::with(['departemen', 'program', 'kategoris', 'rekening']);
 
         if (Auth::user()->role === User::ROLE_USER) {
-            $query->where('departemen_id', Auth::user()->departemen_id);
+            $query->when(Auth::user()->role === User::ROLE_USER, function ($q) {
+                $q->where('departemen_id', Auth::user()->departemen_id);
+            });
             $departemensUser = [Auth::user()->departemen];
         } else {
             $departemensUser = Departemen::all();
         }
 
-        $transaksis  = $query->latest()->get();
-        $rekenings   = Rekening::all();
-        $programs    = Program::all();
-        $kategoris   = Kategori::all();
-
-        return view('transaksi.index', compact(
-            'transaksis',
-            'rekenings',
-            'departemensUser',
-            'programs',
-            'kategoris'
-        ));
+        return view('transaksi.index', [
+            'transaksis'      => $query->latest()->get(),
+            'rekenings'       => Rekening::all(),
+            'departemensUser' => $departemensUser,
+            'programs'        => Program::all(),
+            'kategoris'       => Kategori::all()
+        ]);
     }
 
     public function store(Request $request)
@@ -68,19 +66,24 @@ class TransaksiController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    private function storePemasukan($request)
+    private function storePemasukan(Request $request)
     {
         $request->validate([
             'rekening_id'       => 'required|exists:rekenings,id',
             'nominal_transaksi' => 'required|numeric|min:1',
-            'departemen_id'     => 'required|exists:departemens,id'
+            'departemen_id'     => 'required|exists:departemens,id',
+            'kategori_id'       => 'nullable|array',
+            'kategori_id.*'     => 'exists:kategoris,id',
+            'bukti_nota'        => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
         ]);
 
         $this->checkUserDepartemen($request->departemen_id);
 
         DB::transaction(function () use ($request) {
 
-            Transaksi::create([
+            $filePath = $this->handleUpload($request);
+
+            $transaksi = Transaksi::create([
                 'type_transaksi'    => Transaksi::TYPE_PEMASUKAN,
                 'nominal_transaksi' => $request->nominal_transaksi,
                 'keterangan'        => $request->keterangan,
@@ -88,9 +91,13 @@ class TransaksiController extends Controller
                 'user_id'           => Auth::id(),
                 'rekening_id'       => $request->rekening_id,
                 'departemen_id'     => $request->departemen_id,
-                'program_id'        => $request->program_id ?? null,
-                'kategori_id'       => $request->kategori_id ?? null
+                'program_id'        => $request->program_id,
+                'bukti_nota'        => $filePath
             ]);
+
+            if ($request->kategori_id) {
+                $transaksi->kategoris()->sync($request->kategori_id);
+            }
         });
 
         return back()->with('success', 'Pemasukan berhasil disimpan');
@@ -102,26 +109,30 @@ class TransaksiController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    private function storePengeluaran($request)
+    private function storePengeluaran(Request $request)
     {
         $request->validate([
             'rekening_id'       => 'required|exists:rekenings,id',
             'nominal_transaksi' => 'required|numeric|min:1',
-            'departemen_id'     => 'required|exists:departemens,id'
+            'departemen_id'     => 'required|exists:departemens,id',
+            'kategori_id'       => 'nullable|array',
+            'kategori_id.*'     => 'exists:kategoris,id',
+            'bukti_nota'        => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
         ]);
 
         $this->checkUserDepartemen($request->departemen_id);
 
         $rekening = Rekening::findOrFail($request->rekening_id);
 
-        // ✅ CEK SALDO DARI ACCESSOR
         if ($rekening->saldo_akhir < $request->nominal_transaksi) {
             return back()->withErrors(['Saldo tidak cukup']);
         }
 
         DB::transaction(function () use ($request) {
 
-            Transaksi::create([
+            $filePath = $this->handleUpload($request);
+
+            $transaksi = Transaksi::create([
                 'type_transaksi'    => Transaksi::TYPE_PENGELUARAN,
                 'nominal_transaksi' => $request->nominal_transaksi,
                 'keterangan'        => $request->keterangan,
@@ -129,9 +140,13 @@ class TransaksiController extends Controller
                 'user_id'           => Auth::id(),
                 'rekening_id'       => $request->rekening_id,
                 'departemen_id'     => $request->departemen_id,
-                'program_id'        => $request->program_id ?? null,
-                'kategori_id'       => $request->kategori_id ?? null
+                'program_id'        => $request->program_id,
+                'bukti_nota'        => $filePath
             ]);
+
+            if ($request->kategori_id) {
+                $transaksi->kategoris()->sync($request->kategori_id);
+            }
         });
 
         return back()->with('success', 'Pengeluaran berhasil disimpan');
@@ -143,12 +158,13 @@ class TransaksiController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    private function storeTransfer($request)
+    private function storeTransfer(Request $request)
     {
         $request->validate([
             'rekening_id'        => 'required|exists:rekenings,id',
             'rekening_tujuan_id' => 'required|exists:rekenings,id|different:rekening_id',
-            'nominal_transaksi'  => 'required|numeric|min:1'
+            'nominal_transaksi'  => 'required|numeric|min:1',
+            'bukti_nota'         => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
         ]);
 
         $from = Rekening::findOrFail($request->rekening_id);
@@ -160,7 +176,9 @@ class TransaksiController extends Controller
 
         DB::transaction(function () use ($request, $from, $to) {
 
-            // 1️⃣ Catat pengeluaran dari rekening asal
+            $filePath = $this->handleUpload($request);
+
+            // Pengeluaran dari asal
             Transaksi::create([
                 'type_transaksi'    => Transaksi::TYPE_PENGELUARAN,
                 'nominal_transaksi' => $request->nominal_transaksi,
@@ -168,9 +186,10 @@ class TransaksiController extends Controller
                 'tgl_transaksi'     => now(),
                 'user_id'           => Auth::id(),
                 'rekening_id'       => $from->id,
+                'bukti_nota'        => $filePath
             ]);
 
-            // 2️⃣ Catat pemasukan ke rekening tujuan
+            // Pemasukan ke tujuan
             Transaksi::create([
                 'type_transaksi'    => Transaksi::TYPE_PEMASUKAN,
                 'nominal_transaksi' => $request->nominal_transaksi,
@@ -178,6 +197,7 @@ class TransaksiController extends Controller
                 'tgl_transaksi'     => now(),
                 'user_id'           => Auth::id(),
                 'rekening_id'       => $to->id,
+                'bukti_nota'        => $filePath
             ]);
         });
 
@@ -190,19 +210,23 @@ class TransaksiController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    private function storeUtang($request)
+    private function storeUtang(Request $request)
     {
         $request->validate([
             'nominal_transaksi' => 'required|numeric|min:1',
-            'keterangan'        => 'nullable|string'
+            'keterangan'        => 'nullable|string',
+            'bukti_nota'        => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
         ]);
+
+        $filePath = $this->handleUpload($request);
 
         Transaksi::create([
             'type_transaksi'    => Transaksi::TYPE_UTANG,
             'nominal_transaksi' => $request->nominal_transaksi,
             'keterangan'        => $request->keterangan,
             'tgl_transaksi'     => now(),
-            'user_id'           => Auth::id()
+            'user_id'           => Auth::id(),
+            'bukti_nota'        => $filePath
         ]);
 
         return back()->with('success', 'Utang dicatat');
@@ -214,19 +238,23 @@ class TransaksiController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    private function storePiutang($request)
+    private function storePiutang(Request $request)
     {
         $request->validate([
             'nominal_transaksi' => 'required|numeric|min:1',
-            'keterangan'        => 'nullable|string'
+            'keterangan'        => 'nullable|string',
+            'bukti_nota'        => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
         ]);
+
+        $filePath = $this->handleUpload($request);
 
         Transaksi::create([
             'type_transaksi'    => Transaksi::TYPE_PIUTANG,
             'nominal_transaksi' => $request->nominal_transaksi,
             'keterangan'        => $request->keterangan,
             'tgl_transaksi'     => now(),
-            'user_id'           => Auth::id()
+            'user_id'           => Auth::id(),
+            'bukti_nota'        => $filePath
         ]);
 
         return back()->with('success', 'Piutang dicatat');
@@ -234,7 +262,23 @@ class TransaksiController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | VALIDASI DEPARTEMEN
+    | HANDLE UPLOAD FILE
+    |--------------------------------------------------------------------------
+    */
+
+    private function handleUpload(Request $request)
+    {
+        if ($request->hasFile('bukti_nota')) {
+            return $request->file('bukti_nota')
+                ->store('bukti_transaksi', 'public');
+        }
+
+        return null;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDASI DEPARTEMEN USER
     |--------------------------------------------------------------------------
     */
 
@@ -250,7 +294,7 @@ class TransaksiController extends Controller
 
     public function show(Transaksi $transaksi)
     {
-        $transaksi->load(['departemen', 'program', 'kategori']);
+        $transaksi->load(['departemen', 'program', 'kategoris']);
 
         if (
             Auth::user()->role === User::ROLE_USER &&

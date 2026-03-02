@@ -1,5 +1,5 @@
 <!-- Toast Container -->
-<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100">
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1100">
 
     @if(session('success'))
     <div class="toast align-items-center text-bg-success border-0 show-auto">
@@ -27,6 +27,7 @@
 
 </div>
 
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h5 class="mb-0">Data Program</h5>
 
@@ -34,6 +35,7 @@
         + Add Data
     </button>
 </div>
+
 
 <div class="grid">
     @forelse($programs as $prog)
@@ -93,10 +95,12 @@
         </div>
     </div>
     @endforelse
-
 </div>
 
-{{-- Modal Tambah --}}
+
+{{-- ======================= --}}
+{{-- MODAL TAMBAH --}}
+{{-- ======================= --}}
 <div class="modal fade" id="modalTambahProgram" tabindex="-1">
     <div class="modal-dialog">
         <form method="POST" action="{{ route('program.store') }}">
@@ -112,13 +116,12 @@
 
                     <div class="mb-3">
                         <label class="form-label">Nama Program</label>
-                        <input type="text" name="name_prog" class="form-control"
-                            placeholder="Contoh: Program Pembangunan 2026" required>
+                        <input type="text" placeholder="Contoh: Pembinaan" name="name_prog" class="form-control" required>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Departemen</label>
-                        <select id="departemenSelect" class="form-select" required>
+                        <select name="departemen_id" id="departemenSelect" class="form-select" required>
                             <option value="">-- Pilih Departemen --</option>
                             @foreach($departemens as $dep)
                             <option value="{{ $dep->id }}">
@@ -128,17 +131,20 @@
                         </select>
                     </div>
 
-                    <div class="mb-3" id="subWrapper">
+                    <div class="mb-3" id="subWrapper" style="display:none;">
                         <label class="form-label">Sub Departemen</label>
-                        <select name="departemen_id" id="subDepartemenSelect" class="form-select">
-                            <option value="">-- Pilih Sub Departemen --</option>
+                        <select id="subDepartemenSelect" class="form-select">
                         </select>
                     </div>
+
+                    <input type="hidden" name="departemen_id" id="hiddenDepartemenId">
 
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn btn-primary">Simpan</button>
+                    <button class="btn btn-primary">
+                        Simpan
+                    </button>
                 </div>
 
             </div>
@@ -147,15 +153,27 @@
 </div>
 
 
-{{-- Modal Edit --}}
+
+{{-- ======================= --}}
+{{-- MODAL EDIT --}}
+{{-- ======================= --}}
 @foreach($programs as $prog)
+
+@php
+$selectedParentId = $prog->departemen->parent_id
+? $prog->departemen->parent_id
+: $prog->departemen->id;
+@endphp
+
 <div class="modal fade" id="modalEditProgram{{ $prog->id }}" tabindex="-1">
+
     <div class="modal-dialog">
         <form method="POST" action="{{ route('program.update', $prog->id) }}">
             @csrf
             @method('PUT')
 
             <div class="modal-content">
+
                 <div class="modal-header">
                     <h5 class="modal-title">Edit Program</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -171,30 +189,40 @@
 
                     <div class="mb-3">
                         <label class="form-label">Departemen</label>
-                        <select class="form-select edit-departemen" data-target="subEdit{{ $prog->id }}" required>
+
+                        <select class="form-select edit-departemen" data-target="subEdit{{ $prog->id }}"
+                            data-hidden="hiddenEdit{{ $prog->id }}" data-selected="{{ $prog->departemen->id }}"
+                            required>
+
                             <option value="">-- Pilih Departemen --</option>
+
                             @foreach($departemens as $dep)
-                            <option value="{{ $dep->id }}" {{ ( $prog->departemen->parent_id
-                                ? $prog->departemen->parent_id == $dep->id
-                                : $prog->departemen->id == $dep->id
-                                ) ? 'selected' : ''
-                                }}>
+                            <option value="{{ $dep->id }}" {{ $selectedParentId==$dep->id ? 'selected' : '' }}>
                                 {{ $dep->name_dep }}
                             </option>
                             @endforeach
+
                         </select>
                     </div>
 
-                    <div class="mb-3" id="subWrapperEdit{{ $prog->id }}">
+                    <div class="mb-3" id="subWrapperEdit{{ $prog->id }}" style="display:none;">
+
                         <label class="form-label">Sub Departemen</label>
-                        <select name="departemen_id" id="subEdit{{ $prog->id }}" class="form-select">
+
+                        <select id="subEdit{{ $prog->id }}" class="form-select">
                         </select>
+
                     </div>
+
+                    <input type="hidden" name="departemen_id" id="hiddenEdit{{ $prog->id }}"
+                        value="{{ $prog->departemen->id }}">
 
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn btn-primary">Update</button>
+                    <button class="btn btn-primary">
+                        Update
+                    </button>
                 </div>
 
             </div>
@@ -203,7 +231,8 @@
 </div>
 @endforeach
 
-{{-- kirim data ke js --}}
+
+{{-- Kirim data ke JS --}}
 <script>
-    window.departemensData = @json($departemens ?? []);
+    window.departemensData = @json($departemens);
 </script>

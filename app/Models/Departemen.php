@@ -38,7 +38,7 @@ class Departemen extends Model
         return $this->belongsTo(Kantor::class);
     }
 
-    public function program()
+    public function programs()
     {
         return $this->hasMany(Program::class);
     }
@@ -53,12 +53,12 @@ class Departemen extends Model
         return $this->hasMany(Departemen::class, 'parent_id');
     }
 
-    public function user()
+    public function users()
     {
         return $this->hasMany(User::class);
     }
 
-    public function transaksi()
+    public function transaksis()
     {
         return $this->hasMany(Transaksi::class);
     }

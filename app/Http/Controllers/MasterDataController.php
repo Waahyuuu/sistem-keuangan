@@ -49,7 +49,10 @@ class MasterDataController extends Controller
 
         if ($tab == 'program') {
 
-            $departemens = Departemen::with('children')
+            $departemens = Departemen::with([
+                'programs',
+                'children.programs'
+            ])
                 ->whereNull('parent_id')
                 ->orderBy('name_dep')
                 ->get();
@@ -60,8 +63,7 @@ class MasterDataController extends Controller
         }
 
         if ($tab == 'kategori') {
-            $programs = Program::orderBy('name_prog')->get();
-            $kategoris = Kategori::with('program')->latest()->get();
+            $kategoris = Kategori::latest()->get();
         }
 
         return view('master-data.index', compact(
@@ -345,6 +347,12 @@ class MasterDataController extends Controller
 
     public function storeSubDepartemen(Request $request, Departemen $departemen)
     {
+        $slug = Str::slug($request->name_dep);
+
+        $request->merge([
+            'slug' => $slug
+        ]);
+
         $request->validate([
             'name_dep' => [
                 'required',
@@ -352,16 +360,19 @@ class MasterDataController extends Controller
                     ->where(function ($query) use ($departemen) {
                         return $query->where('parent_id', $departemen->id);
                     }),
-            ]
+            ],
+            'slug' => 'unique:departemens,slug'
         ], [
             'name_dep.required' => 'Nama sub departemen wajib diisi.',
-            'name_dep.unique' => 'Nama sub departemen sudah digunakan.',
+            'name_dep.unique' => 'Sub Departemen telah digunakan di departemen ini.',
+            'slug.unique' => 'Sub Departemen telah digunakan di departemen lain.'
         ]);
 
         Departemen::create([
             'name_dep'   => $request->name_dep,
             'kantor_id'  => $departemen->kantor_id,
-            'parent_id'  => $departemen->id
+            'parent_id'  => $departemen->id,
+            'slug'       => $slug
         ]);
 
         return back()->with('success', 'Sub departemen berhasil ditambahkan');
@@ -369,6 +380,12 @@ class MasterDataController extends Controller
 
     public function updateSubDepartemen(Request $request, Departemen $departemen)
     {
+        $slug = Str::slug($request->name_dep);
+
+        $request->merge([
+            'slug' => $slug
+        ]);
+
         $request->validate([
             'name_dep' => [
                 'required',
@@ -377,14 +394,17 @@ class MasterDataController extends Controller
                         return $query->where('parent_id', $departemen->parent_id);
                     })
                     ->ignore($departemen->id),
-            ]
+            ],
+            'slug' => Rule::unique('departemens', 'slug')->ignore($departemen->id),
         ], [
             'name_dep.required' => 'Nama sub departemen wajib diisi.',
-            'name_dep.unique' => 'Nama sub departemen sudah digunakan.',
+            'name_dep.unique' => 'Sub Departemen telah digunakan di departemen ini.',
+            'slug.unique' => 'Sub Departemen telah digunakan di departemen lain.'
         ]);
 
         $departemen->update([
-            'name_dep' => $request->name_dep
+            'name_dep' => $request->name_dep,
+            'slug' => $slug
         ]);
 
         return back()->with('success', 'Sub departemen berhasil diperbarui');
@@ -485,25 +505,22 @@ class MasterDataController extends Controller
                 'required',
                 Rule::unique('kategoris')
                     ->where(function ($query) use ($request) {
-                        return $query->where('program_id', $request->program_id)
-                            ->where('type_ktgr', $request->type_ktgr);
+                        return $query->where('type_ktgr', $request->type_ktgr);
                     }),
             ],
             'type_ktgr' => 'required|in:pemasukan,pengeluaran',
-            'program_id' => 'required|exists:programs,id',
             'color_ktgr' => 'nullable|string|max:7',
         ], [
             'name_ktgr.required' => 'Nama kategori wajib diisi.',
-            'name_ktgr.unique' => 'Nama kategori dengan tipe ini sudah digunakan di program tersebut.',
+            'name_ktgr.unique' => 'Nama kategori dengan tipe ini sudah digunakan.',
             'type_ktgr.required' => 'Tipe kategori wajib dipilih.',
-            'program_id.required' => 'Program wajib dipilih.',
+            'type_ktgr.in' => 'Tipe kategori tidak valid.',
         ]);
 
         Kategori::create([
             'name_ktgr' => $request->name_ktgr,
             'type_ktgr' => $request->type_ktgr,
             'color_ktgr' => $request->color_ktgr,
-            'program_id' => $request->program_id,
         ]);
 
         return back()->with('success', 'Kategori berhasil ditambahkan');
@@ -516,26 +533,23 @@ class MasterDataController extends Controller
                 'required',
                 Rule::unique('kategoris')
                     ->where(function ($query) use ($request) {
-                        return $query->where('program_id', $request->program_id)
-                            ->where('type_ktgr', $request->type_ktgr);
+                        return $query->where('type_ktgr', $request->type_ktgr);
                     })
                     ->ignore($kategori->id),
             ],
             'type_ktgr' => 'required|in:pemasukan,pengeluaran',
-            'program_id' => 'required|exists:programs,id',
             'color_ktgr' => 'nullable|string|max:7',
         ], [
             'name_ktgr.required' => 'Nama kategori wajib diisi.',
-            'name_ktgr.unique' => 'Nama kategori dengan tipe ini sudah digunakan di program tersebut.',
+            'name_ktgr.unique' => 'Nama kategori dengan tipe ini sudah digunakan.',
             'type_ktgr.required' => 'Tipe kategori wajib dipilih.',
-            'program_id.required' => 'Program wajib dipilih.',
+            'type_ktgr.in' => 'Tipe kategori tidak valid.',
         ]);
 
         $kategori->update([
             'name_ktgr' => $request->name_ktgr,
             'type_ktgr' => $request->type_ktgr,
             'color_ktgr' => $request->color_ktgr,
-            'program_id' => $request->program_id,
         ]);
 
         return back()->with('success', 'Kategori berhasil diperbarui');
@@ -544,6 +558,7 @@ class MasterDataController extends Controller
     public function deleteKategori(Kategori $kategori)
     {
         $kategori->delete();
+
         return back()->with('success', 'Kategori berhasil dihapus');
     }
 

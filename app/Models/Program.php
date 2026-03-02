@@ -16,12 +16,7 @@ class Program extends Model
         return $this->belongsTo(Departemen::class);
     }
 
-    public function kategori()
-    {
-        return $this->hasMany(Kategori::class);
-    }
-
-    public function user()
+    public function users()
     {
         return $this->hasMany(User::class);
     }

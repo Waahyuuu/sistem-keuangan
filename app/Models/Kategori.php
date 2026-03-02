@@ -9,17 +9,11 @@ class Kategori extends Model
     protected $fillable = [
         'name_ktgr',
         'type_ktgr',
-        'color_ktgr',
-        'program_id'
+        'color_ktgr'
     ];
 
-    public function program()
+    public function transaksis()
     {
-        return $this->belongsTo(Program::class);
-    }
-
-    public function transaksi()
-    {
-        return $this->hasMany(Transaksi::class);
+        return $this->belongsToMany(Transaksi::class, 'kategori_transaksi');
     }
 }
