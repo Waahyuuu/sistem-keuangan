@@ -53,8 +53,6 @@
                     {{ $prog->departemen->parent->name_dep }}
                 </span>
 
-                <i class="bi bi-arrow-right mx-1"></i>
-
                 <span class="badge bg-secondary">
                     Sub: {{ $prog->departemen->name_dep }}
                 </span>

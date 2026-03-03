@@ -15,6 +15,15 @@
     </div>
     @endif
 
+    @if(session('error'))
+    <div class="toast align-items-center text-bg-warning border-0 show" role="alert">
+        <div class="d-flex">
+            <div class="toast-body">{{ session('error') }}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+    @endif
+
     @if ($errors->any())
     <div class="toast align-items-center text-bg-danger border-0 show" role="alert">
         <div class="d-flex">
@@ -31,55 +40,148 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="mb-4">Transaksi</h3>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTransaksi">
-        + Tambah Transaksi
-    </button>
 </div>
 
-<!-- Daftar Transaksi -->
+<form method="GET" class="mb-3 d-flex gap-2 align-items-center">
+    <input type="date" name="tanggal" value="{{ $tanggal }}" class="form-control" style="max-width:200px;">
 
+    <button class="btn btn-primary">
+        Filter
+    </button>
+
+    <a href="{{ route('transaksi.index') }}" class="btn btn-secondary">
+        Hari Ini
+    </a>
+</form>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    @php
+    \Carbon\Carbon::setLocale('id');
+    $tgl = \Carbon\Carbon::parse($tanggal);
+    $isToday = $tgl->isToday();
+    @endphp
+
+    <div>
+        <h4 class="fw-bold mb-1">
+            @if($isToday)
+            Hari Ini
+            @else
+            {{ $tgl->translatedFormat('l') }}
+            @endif
+        </h4>
+
+        <small class="text-muted">
+            @if($isToday)
+            {{ $tgl->translatedFormat('l, d M Y') }}
+            @else
+            {{ $tgl->translatedFormat('d M Y') }}
+            @endif
+        </small>
+    </div>
+
+    <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalTransaksi">
+        + Add Transaksi
+    </button>
+
+</div>
+
+{{-- Daftar Transaksi --}}
 @forelse($transaksis as $trx)
 
-<div class="card bg-light shadow-sm rounded-4 card-hover p-3 mb-3">
-    <div class="d-flex justify-content-between">
-        <div>
-            <h6 class="fw-bold">{{ ucfirst($trx->type_transaksi) }}</h6>
-            <small>{{ $trx->keterangan ?? '-' }}</small>
+@php
+$isPemasukan = $trx->type_transaksi === 'pemasukan';
+$isPengeluaran = $trx->type_transaksi === 'pengeluaran';
+$isTransfer = $trx->type_transaksi === 'transfer';
+@endphp
+
+<div class="modern-card" data-id="{{ $trx->id }}" data-bs-toggle="modal" data-bs-target="#modalDetailTransaksi">
+
+    <div class="d-flex justify-content-between align-items-center">
+
+        {{-- LEFT --}}
+        <div class="d-flex align-items-center gap-4">
+
+            <div class="modern-icon
+                {{ $isPemasukan ? 'icon-success' : '' }}
+                {{ $isPengeluaran ? 'icon-danger' : '' }}
+                {{ $isTransfer ? 'icon-primary' : '' }}
+            ">
+
+                @if($isPemasukan)
+                <i class="bi bi-arrow-down-left"></i>
+                @elseif($isPengeluaran)
+                <i class="bi bi-arrow-up-right"></i>
+                @else
+                <i class="bi bi-arrow-left-right"></i>
+                @endif
+            </div>
+
+            <div>
+                <h6 class="fw-bold mb-1">
+                    @if($isTransfer)
+                    {{ $trx->keterangan ?? 'Internal Transfer' }}
+                    @else
+                    {{ $trx->keterangan ?? 'Tanpa Keterangan' }}
+                    @endif
+                </h6>
+
+                <small class="text-muted">
+                    @if($isTransfer)
+                    {{ $trx->rekening->name_rek ?? '-' }}
+                    →
+                    {{ $trx->rekeningTujuan->name_rek ?? '-' }}
+                    @else
+                    {{ $trx->departemen->name_dep ?? '-' }}
+                    •
+                    {{ $trx->program->name_prog ?? '-' }}
+                    @endif
+                </small>
+            </div>
+
         </div>
+
+        {{-- RIGHT --}}
         <div class="text-end">
-            <span class="fw-bold text-primary">
+
+            <div class="modern-amount
+                {{ $isPemasukan ? 'text-success' : '' }}
+                {{ $isPengeluaran ? 'text-danger' : '' }}
+            ">
+
+                @if($isPemasukan)
+                + Rp {{ number_format($trx->nominal_transaksi, 0, ',', '.') }}
+                @elseif($isPengeluaran)
+                - Rp {{ number_format($trx->nominal_transaksi, 0, ',', '.') }}
+                @else
                 Rp {{ number_format($trx->nominal_transaksi, 0, ',', '.') }}
-            </span>
-            <br>
-            <small>{{ $trx->tgl_transaksi->format('d M Y') }}</small>
+                @endif
+            </div>
+
+            <div class="modern-badge">
+                @if($isTransfer)
+                Internal Transfer
+                @else
+                {{ $trx->rekening->name_rek ?? '-' }}
+                @endif
+            </div>
+
         </div>
-    </div>
 
-    <div class="mt-2">
-        <span class="badge bg-secondary">
-            Departemen: {{ $trx->departemen->name_dep ?? '-' }}
-        </span>
-        <span class="badge bg-info">
-            Program: {{ $trx->program->name_prog ?? '-' }}
-        </span>
-        <span class="badge bg-warning text-dark">
-            Kategori: {{ $trx->kategori->name_ktgr ?? '-' }}
-        </span>
-    </div>
-
-    <div class="mt-3 d-flex justify-content-end gap-2">
-        <button class="btn btn-sm btn-outline-info detail-btn" data-id="{{ $trx->id }}" data-bs-toggle="modal"
-            data-bs-target="#modalDetailTransaksi">
-            Detail
-        </button>
     </div>
 </div>
+
 @empty
-<div class="col-12">
-    <div class="alert alert-info text-center">Belum ada transaksi</div>
+@if($isFilter && $tanggal != now()->toDateString())
+<div class="alert alert-light text-center rounded-4">
+    Belum ada transaksi ditanggal ini
 </div>
+@else
+<div class="alert alert-light text-center rounded-4">
+    Belum ada transaksi
+</div>
+@endif
 @endforelse
-
 
 {{-- Modal Transaksi --}}
 <div class="modal fade" id="modalTransaksi" tabindex="-1">
@@ -253,5 +355,42 @@
         </div>
     </div>
 </div>
+
+<script>
+    function openImagePreview(src) {
+    const overlay = document.getElementById('imagePreviewOverlay');
+    const img = document.getElementById('previewImage');
+
+    img.src = src;
+    overlay.style.display = 'flex';
+
+    setTimeout(() => {
+        overlay.classList.add('show');
+    }, 10);
+
+    document.body.style.overflow = 'hidden';
+}
+
+function closeImagePreview() {
+    const overlay = document.getElementById('imagePreviewOverlay');
+
+    overlay.classList.remove('show');
+    overlay.classList.add('closing');
+
+    setTimeout(() => {
+        overlay.classList.remove('closing');
+        overlay.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }, 250);
+}
+
+// klik background untuk close
+document.getElementById('imagePreviewOverlay')
+    .addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeImagePreview();
+        }
+});
+</script>
 
 @endsection

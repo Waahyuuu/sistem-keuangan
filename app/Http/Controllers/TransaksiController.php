@@ -15,25 +15,46 @@ use App\Models\User;
 
 class TransaksiController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $query = Transaksi::with(['departemen', 'program', 'kategoris', 'rekening']);
+        $tanggal = $request->tanggal ?? now()->toDateString();
+        $today = now()->toDateString();
 
+        if ($tanggal > $today) {
+            return redirect()
+                ->route('transaksi.index')
+                ->with('error', 'Tanggal tidak terdeteksi');
+        }
+
+        $query = Transaksi::with([
+            'departemen',
+            'program',
+            'kategoris',
+            'rekening',
+            'rekeningTujuan'
+        ]);
+
+        // Role filter
         if (Auth::user()->role === User::ROLE_USER) {
-            $query->when(Auth::user()->role === User::ROLE_USER, function ($q) {
-                $q->where('departemen_id', Auth::user()->departemen_id);
-            });
+            $query->where('departemen_id', Auth::user()->departemen_id);
             $departemensUser = [Auth::user()->departemen];
         } else {
             $departemensUser = Departemen::all();
         }
 
+        // Filter tanggal
+        $query->whereDate('created_at', $tanggal);
+
+        $transaksis = $query->latest()->get();
+
         return view('transaksi.index', [
-            'transaksis'      => $query->latest()->get(),
+            'transaksis'      => $transaksis,
             'rekenings'       => Rekening::all(),
             'departemensUser' => $departemensUser,
             'programs'        => Program::all(),
-            'kategoris'       => Kategori::all()
+            'kategoris'       => Kategori::all(),
+            'tanggal'         => $tanggal,
+            'isFilter'        => $request->has('tanggal')
         ]);
     }
 
@@ -164,40 +185,31 @@ class TransaksiController extends Controller
             'rekening_id'        => 'required|exists:rekenings,id',
             'rekening_tujuan_id' => 'required|exists:rekenings,id|different:rekening_id',
             'nominal_transaksi'  => 'required|numeric|min:1',
+            'keterangan'         => 'nullable|string',
             'bukti_nota'         => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
         ]);
 
         $from = Rekening::findOrFail($request->rekening_id);
-        $to   = Rekening::findOrFail($request->rekening_tujuan_id);
 
+        // VALIDASI SALDO (masih boleh)
         if ($from->saldo_akhir < $request->nominal_transaksi) {
             return back()->withErrors(['Saldo rekening asal tidak cukup']);
         }
 
-        DB::transaction(function () use ($request, $from, $to) {
+        DB::transaction(function () use ($request) {
 
             $filePath = $this->handleUpload($request);
 
-            // Pengeluaran dari asal
+            // CUKUP 1 TRANSAKSI
             Transaksi::create([
-                'type_transaksi'    => Transaksi::TYPE_PENGELUARAN,
-                'nominal_transaksi' => $request->nominal_transaksi,
-                'keterangan'        => 'Transfer ke ' . $to->name_rek . ' - ' . $request->keterangan,
-                'tgl_transaksi'     => now(),
-                'user_id'           => Auth::id(),
-                'rekening_id'       => $from->id,
-                'bukti_nota'        => $filePath
-            ]);
-
-            // Pemasukan ke tujuan
-            Transaksi::create([
-                'type_transaksi'    => Transaksi::TYPE_PEMASUKAN,
-                'nominal_transaksi' => $request->nominal_transaksi,
-                'keterangan'        => 'Transfer dari ' . $from->name_rek . ' - ' . $request->keterangan,
-                'tgl_transaksi'     => now(),
-                'user_id'           => Auth::id(),
-                'rekening_id'       => $to->id,
-                'bukti_nota'        => $filePath
+                'type_transaksi'     => Transaksi::TYPE_TRANSFER,
+                'nominal_transaksi'  => $request->nominal_transaksi,
+                'keterangan'         => $request->keterangan,
+                'tgl_transaksi'      => now(),
+                'user_id'            => Auth::id(),
+                'rekening_id'        => $request->rekening_id,
+                'rekening_tujuan_id' => $request->rekening_tujuan_id,
+                'bukti_nota'         => $filePath
             ]);
         });
 

@@ -41,15 +41,17 @@ $departemensList = $departemensUser ?? [];
 
 <div class="mb-3">
     <label class="form-label">Kategori</label>
-    <select name="kategori_id[]" class="form-select" multiple>
+
+    <select class="kategoriSelect" name="kategori_id[]" multiple>
         @foreach($kategoris as $ktgr)
         <option value="{{ $ktgr->id }}">
             {{ $ktgr->name_ktgr }}
         </option>
         @endforeach
     </select>
+
     <small class="text-muted">
-        Bisa pilih lebih dari 1 kategori (Ctrl / Cmd + Klik)
+        Bisa cari dan pilih kategori satu per satu
     </small>
 </div>
 

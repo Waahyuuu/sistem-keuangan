@@ -11,14 +11,3 @@
         "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
         "Noto Color Emoji";
 }
-
-/* Css Rekening Start */
-.card-hover {
-    transition: all 0.2s ease;
-}
-
-.card-hover:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
-}
-/* Css Rekening End */

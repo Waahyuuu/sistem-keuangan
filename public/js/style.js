@@ -171,34 +171,61 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("logout-form")?.submit();
     }, 7200000);
 
-    /* ===========================
-       DETAIL TRANSAKSI
-    ============================ */
-    document.querySelectorAll(".detail-btn").forEach((btn) => {
-        btn.addEventListener("click", function () {
-            const id = this.dataset.id;
-            const modalBody = document.querySelector(
-                "#modalDetailTransaksi .modal-body",
-            );
+    /*
+    |--------------------------------------------------------------------------
+    | DETAIL MODAL FETCH
+    |--------------------------------------------------------------------------
+    */
 
+    const modal = document.getElementById("modalDetailTransaksi");
+
+    if (modal) {
+        modal.addEventListener("show.bs.modal", function (event) {
+            const card = event.relatedTarget;
+            if (!card) return;
+
+            const id = card.getAttribute("data-id");
+            if (!id) return;
+
+            const modalBody = modal.querySelector(".modal-body");
             modalBody.innerHTML = "Loading...";
 
             fetch(`/transaksi/${id}`)
                 .then((response) => {
-                    if (response.status === 403) throw new Error("403");
-                    if (!response.ok)
-                        throw new Error("HTTP " + response.status);
+                    if (!response.ok) {
+                        throw new Error("Gagal mengambil data");
+                    }
                     return response.text();
                 })
-                .then((html) => {
-                    modalBody.innerHTML = html;
+                .then((data) => {
+                    modalBody.innerHTML = data;
                 })
                 .catch((error) => {
-                    modalBody.innerHTML =
-                        error.message === "403"
-                            ? '<div class="text-danger">Akses ditolak</div>'
-                            : '<div class="text-danger">Gagal memuat detail</div>';
+                    modalBody.innerHTML = `
+                        <div class="alert alert-danger">
+                            Terjadi kesalahan saat memuat data.
+                        </div>
+                    `;
+                    console.error(error);
                 });
+        });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | TOM SELECT INIT
+    |--------------------------------------------------------------------------
+    */
+
+    document.querySelectorAll(".kategoriSelect").forEach(function (el) {
+        new TomSelect(el, {
+            plugins: ["remove_button"],
+            create: false,
+            maxItems: null,
+            hideSelected: true,
+            closeAfterSelect: true,
+            persist: false,
+            placeholder: "Cari kategori...",
         });
     });
 
