@@ -17,8 +17,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
-    {{-- Css Umum --}}
+    {{-- Css --}}
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/dashboard.css') }}" rel="stylesheet">
 
     <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css" rel="stylesheet">
 </head>
@@ -26,6 +27,8 @@
 <body>
 
     <div class="d-flex">
+        {{-- Toast --}}
+        @include('components.toast')
 
         {{-- Sidebar --}}
         @include('layouts.sidebar')
@@ -42,8 +45,9 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-    {{-- JS Umum --}}
+    {{-- JS --}}
     <script src="{{ asset('js/style.js') }}"></script>
+    <script src="{{ asset('js/components.js') }}"></script>
 
     {{-- Custom Page Scripts --}}
     @stack('scripts')

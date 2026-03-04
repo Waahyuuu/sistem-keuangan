@@ -1,5 +1,3 @@
-@php use Illuminate\Support\Str; @endphp
-
 <div class="container-fluid">
 
     <div class="mb-3 text-center">
@@ -21,10 +19,13 @@
 
     <hr>
 
+    {{-- Inputan --}}
     <div class="row mb-2">
         <div class="col-5 fw-semibold">Rekening</div>
         <div class="col-7">
-            {{ $transaksi->rekening->name_rek ?? '-' }}
+            {{ $transaksi->rekening_nama
+            ?? optional($transaksi->rekening)->name_rek
+            ?? '-' }}
         </div>
     </div>
 
@@ -32,7 +33,9 @@
     <div class="row mb-2">
         <div class="col-5 fw-semibold">Rekening Tujuan</div>
         <div class="col-7">
-            {{ optional($transaksi->rekeningTujuan)->name_rek ?? '-' }}
+            {{ $transaksi->rekening_tujuan_nama
+            ?? optional($transaksi->rekeningTujuan)->name_rek
+            ?? '-' }}
         </div>
     </div>
     @endif
@@ -40,24 +43,30 @@
     <div class="row mb-2">
         <div class="col-5 fw-semibold">Departemen</div>
         <div class="col-7">
-            {{ $transaksi->departemen->name_dep ?? '-' }}
+            {{ $transaksi->departemen_nama
+            ?? optional($transaksi->departemen)->name_dep
+            ?? '-' }}
         </div>
     </div>
 
     <div class="row mb-2">
         <div class="col-5 fw-semibold">Program</div>
         <div class="col-7">
-            {{ $transaksi->program->name_prog ?? '-' }}
+            {{ $transaksi->program_nama
+            ?? optional($transaksi->program)->name_prog
+            ?? '-' }}
         </div>
     </div>
 
     <div class="row mb-2">
         <div class="col-5 fw-semibold">Kategori</div>
         <div class="col-7">
-            @if($transaksi->kategoris->count())
-            @foreach($transaksi->kategoris as $kategori)
+            @if($transaksi->kategoriSnapshots->count())
+            @foreach($transaksi->kategoriSnapshots as $kategori)
+
             @php
-            $bg = $kategori->color_ktgr ?? '#6c757d';
+            $bg = $kategori->kategori_color ?? '#6c757d';
+
             $hex = str_replace('#', '', $bg);
             $r = hexdec(substr($hex, 0, 2));
             $g = hexdec(substr($hex, 2, 2));
@@ -67,8 +76,9 @@
             @endphp
 
             <span class="badge me-1 mb-1" style="background-color: {{ $bg }}; color: {{ $textColor }};">
-                {{ $kategori->name_ktgr }}
+                {{ $kategori->kategori_nama }}
             </span>
+
             @endforeach
             @else
             -
@@ -90,7 +100,6 @@
         </div>
     </div>
 
-    {{-- ================== BUKTI NOTA ================== --}}
     @if($transaksi->bukti_nota)
     <hr>
     <div class="row">
@@ -114,16 +123,14 @@
 
 </div>
 
-{{-- ================== FULLSCREEN IMAGE VIEWER ================== --}}
+{{-- Preview Gambar --}}
 <div id="imagePreviewOverlay" class="preview-overlay">
     <div class="preview-wrapper">
 
-        <!-- Tombol Close -->
         <span onclick="closeImagePreview()" class="preview-close">
             &times;
         </span>
 
-        <!-- Gambar -->
         <img id="previewImage" class="preview-image">
     </div>
 </div>

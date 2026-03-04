@@ -43,7 +43,7 @@ class TransaksiController extends Controller
         }
 
         // Filter tanggal
-        $query->whereDate('created_at', $tanggal);
+        $query->whereDate('tgl_transaksi', $tanggal);
 
         $transaksis = $query->latest()->get();
 
@@ -70,11 +70,11 @@ class TransaksiController extends Controller
             case Transaksi::TYPE_TRANSFER:
                 return $this->storeTransfer($request);
 
-            case Transaksi::TYPE_UTANG:
-                return $this->storeUtang($request);
+            // case Transaksi::TYPE_UTANG:
+            //     return $this->storeUtang($request);
 
-            case Transaksi::TYPE_PIUTANG:
-                return $this->storePiutang($request);
+            // case Transaksi::TYPE_PIUTANG:
+            //     return $this->storePiutang($request);
 
             default:
                 abort(400, 'Tipe transaksi tidak valid');
@@ -93,6 +93,7 @@ class TransaksiController extends Controller
             'rekening_id'       => 'required|exists:rekenings,id',
             'nominal_transaksi' => 'required|numeric|min:1',
             'departemen_id'     => 'required|exists:departemens,id',
+            'program_id'        => 'nullable|exists:programs,id',
             'kategori_id'       => 'nullable|array',
             'kategori_id.*'     => 'exists:kategoris,id',
             'bukti_nota'        => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
@@ -104,20 +105,50 @@ class TransaksiController extends Controller
 
             $filePath = $this->handleUpload($request);
 
+            $rekening   = Rekening::findOrFail($request->rekening_id);
+            $departemen = Departemen::findOrFail($request->departemen_id);
+            $program    = $request->program_id
+                ? Program::find($request->program_id)
+                : null;
+
             $transaksi = Transaksi::create([
                 'type_transaksi'    => Transaksi::TYPE_PEMASUKAN,
                 'nominal_transaksi' => $request->nominal_transaksi,
                 'keterangan'        => $request->keterangan,
                 'tgl_transaksi'     => now(),
-                'user_id'           => Auth::id(),
-                'rekening_id'       => $request->rekening_id,
-                'departemen_id'     => $request->departemen_id,
-                'program_id'        => $request->program_id,
-                'bukti_nota'        => $filePath
+
+                'user_id'   => Auth::id(),
+                'user_nama' => Auth::user()->name,
+
+                'rekening_id'   => $rekening->id,
+                'rekening_nama' => $rekening->name_rek,
+
+                'departemen_id'   => $departemen->id,
+                'departemen_nama' => $departemen->name_dep,
+
+                'program_id'   => $program?->id,
+                'program_nama' => $program?->name_prog,
+
+                'bukti_nota' => $filePath
             ]);
 
             if ($request->kategori_id) {
-                $transaksi->kategoris()->sync($request->kategori_id);
+
+                $dataKategori = [];
+
+                foreach ($request->kategori_id as $kategoriId) {
+
+                    $kategori = Kategori::find($kategoriId);
+
+                    if ($kategori) {
+                        $dataKategori[$kategoriId] = [
+                            'kategori_nama'  => $kategori->name_ktgr,
+                            'kategori_color' => $kategori->color_ktgr,
+                        ];
+                    }
+                }
+
+                $transaksi->kategoris()->sync($dataKategori);
             }
         });
 
@@ -136,6 +167,7 @@ class TransaksiController extends Controller
             'rekening_id'       => 'required|exists:rekenings,id',
             'nominal_transaksi' => 'required|numeric|min:1',
             'departemen_id'     => 'required|exists:departemens,id',
+            'program_id'        => 'nullable|exists:programs,id',
             'kategori_id'       => 'nullable|array',
             'kategori_id.*'     => 'exists:kategoris,id',
             'bukti_nota'        => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
@@ -149,24 +181,53 @@ class TransaksiController extends Controller
             return back()->withErrors(['Saldo tidak cukup']);
         }
 
-        DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($request, $rekening) {
 
             $filePath = $this->handleUpload($request);
+
+            $departemen = Departemen::findOrFail($request->departemen_id);
+            $program    = $request->program_id
+                ? Program::find($request->program_id)
+                : null;
 
             $transaksi = Transaksi::create([
                 'type_transaksi'    => Transaksi::TYPE_PENGELUARAN,
                 'nominal_transaksi' => $request->nominal_transaksi,
                 'keterangan'        => $request->keterangan,
                 'tgl_transaksi'     => now(),
-                'user_id'           => Auth::id(),
-                'rekening_id'       => $request->rekening_id,
-                'departemen_id'     => $request->departemen_id,
-                'program_id'        => $request->program_id,
-                'bukti_nota'        => $filePath
+
+                'user_id'   => Auth::id(),
+                'user_nama' => Auth::user()->name,
+
+                'rekening_id'   => $rekening->id,
+                'rekening_nama' => $rekening->name_rek,
+
+                'departemen_id'   => $departemen->id,
+                'departemen_nama' => $departemen->name_dep,
+
+                'program_id'   => $program?->id,
+                'program_nama' => $program?->name_prog,
+
+                'bukti_nota' => $filePath
             ]);
 
             if ($request->kategori_id) {
-                $transaksi->kategoris()->sync($request->kategori_id);
+
+                $dataKategori = [];
+
+                foreach ($request->kategori_id as $kategoriId) {
+
+                    $kategori = Kategori::find($kategoriId);
+
+                    if ($kategori) {
+                        $dataKategori[$kategoriId] = [
+                            'kategori_nama'  => $kategori->name_ktgr,
+                            'kategori_color' => $kategori->color_ktgr,
+                        ];
+                    }
+                }
+
+                $transaksi->kategoris()->sync($dataKategori);
             }
         });
 
@@ -190,26 +251,32 @@ class TransaksiController extends Controller
         ]);
 
         $from = Rekening::findOrFail($request->rekening_id);
+        $to   = Rekening::findOrFail($request->rekening_tujuan_id);
 
-        // VALIDASI SALDO (masih boleh)
         if ($from->saldo_akhir < $request->nominal_transaksi) {
             return back()->withErrors(['Saldo rekening asal tidak cukup']);
         }
 
-        DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($request, $from, $to) {
 
             $filePath = $this->handleUpload($request);
 
-            // CUKUP 1 TRANSAKSI
             Transaksi::create([
                 'type_transaksi'     => Transaksi::TYPE_TRANSFER,
                 'nominal_transaksi'  => $request->nominal_transaksi,
                 'keterangan'         => $request->keterangan,
                 'tgl_transaksi'      => now(),
-                'user_id'            => Auth::id(),
-                'rekening_id'        => $request->rekening_id,
-                'rekening_tujuan_id' => $request->rekening_tujuan_id,
-                'bukti_nota'         => $filePath
+
+                'user_id'   => Auth::id(),
+                'user_nama' => Auth::user()->name,
+
+                'rekening_id'   => $from->id,
+                'rekening_nama' => $from->name_rek,
+
+                'rekening_tujuan_id'   => $to->id,
+                'rekening_tujuan_nama' => $to->name_rek,
+
+                'bukti_nota' => $filePath
             ]);
         });
 
@@ -222,27 +289,27 @@ class TransaksiController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    private function storeUtang(Request $request)
-    {
-        $request->validate([
-            'nominal_transaksi' => 'required|numeric|min:1',
-            'keterangan'        => 'nullable|string',
-            'bukti_nota'        => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
-        ]);
+    // private function storeUtang(Request $request)
+    // {
+    //     $request->validate([
+    //         'nominal_transaksi' => 'required|numeric|min:1',
+    //         'keterangan'        => 'nullable|string',
+    //         'bukti_nota'        => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
+    //     ]);
 
-        $filePath = $this->handleUpload($request);
+    //     $filePath = $this->handleUpload($request);
 
-        Transaksi::create([
-            'type_transaksi'    => Transaksi::TYPE_UTANG,
-            'nominal_transaksi' => $request->nominal_transaksi,
-            'keterangan'        => $request->keterangan,
-            'tgl_transaksi'     => now(),
-            'user_id'           => Auth::id(),
-            'bukti_nota'        => $filePath
-        ]);
+    //     Transaksi::create([
+    //         'type_transaksi'    => Transaksi::TYPE_UTANG,
+    //         'nominal_transaksi' => $request->nominal_transaksi,
+    //         'keterangan'        => $request->keterangan,
+    //         'tgl_transaksi'     => now(),
+    //         'user_id'           => Auth::id(),
+    //         'bukti_nota'        => $filePath
+    //     ]);
 
-        return back()->with('success', 'Utang dicatat');
-    }
+    //     return back()->with('success', 'Utang dicatat');
+    // }
 
     /*
     |--------------------------------------------------------------------------
@@ -250,27 +317,27 @@ class TransaksiController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    private function storePiutang(Request $request)
-    {
-        $request->validate([
-            'nominal_transaksi' => 'required|numeric|min:1',
-            'keterangan'        => 'nullable|string',
-            'bukti_nota'        => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
-        ]);
+    // private function storePiutang(Request $request)
+    // {
+    //     $request->validate([
+    //         'nominal_transaksi' => 'required|numeric|min:1',
+    //         'keterangan'        => 'nullable|string',
+    //         'bukti_nota'        => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
+    //     ]);
 
-        $filePath = $this->handleUpload($request);
+    //     $filePath = $this->handleUpload($request);
 
-        Transaksi::create([
-            'type_transaksi'    => Transaksi::TYPE_PIUTANG,
-            'nominal_transaksi' => $request->nominal_transaksi,
-            'keterangan'        => $request->keterangan,
-            'tgl_transaksi'     => now(),
-            'user_id'           => Auth::id(),
-            'bukti_nota'        => $filePath
-        ]);
+    //     Transaksi::create([
+    //         'type_transaksi'    => Transaksi::TYPE_PIUTANG,
+    //         'nominal_transaksi' => $request->nominal_transaksi,
+    //         'keterangan'        => $request->keterangan,
+    //         'tgl_transaksi'     => now(),
+    //         'user_id'           => Auth::id(),
+    //         'bukti_nota'        => $filePath
+    //     ]);
 
-        return back()->with('success', 'Piutang dicatat');
-    }
+    //     return back()->with('success', 'Piutang dicatat');
+    // }
 
     /*
     |--------------------------------------------------------------------------

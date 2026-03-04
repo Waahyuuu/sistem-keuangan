@@ -4,40 +4,6 @@
 
 @section('content')
 
-<!-- Toast Container -->
-<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100">
-    @if(session('success'))
-    <div class="toast align-items-center text-bg-success border-0 show" role="alert">
-        <div class="d-flex">
-            <div class="toast-body">{{ session('success') }}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-    </div>
-    @endif
-
-    @if(session('error'))
-    <div class="toast align-items-center text-bg-warning border-0 show" role="alert">
-        <div class="d-flex">
-            <div class="toast-body">{{ session('error') }}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-    </div>
-    @endif
-
-    @if ($errors->any())
-    <div class="toast align-items-center text-bg-danger border-0 show" role="alert">
-        <div class="d-flex">
-            <div class="toast-body">
-                @foreach ($errors->all() as $error)
-                <div>{{ $error }}</div>
-                @endforeach
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-    </div>
-    @endif
-</div>
-
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="mb-4">Transaksi</h3>
 </div>
@@ -99,7 +65,6 @@ $isTransfer = $trx->type_transaksi === 'transfer';
 
     <div class="d-flex justify-content-between align-items-center">
 
-        {{-- LEFT --}}
         <div class="d-flex align-items-center gap-4">
 
             <div class="modern-icon
@@ -128,20 +93,35 @@ $isTransfer = $trx->type_transaksi === 'transfer';
 
                 <small class="text-muted">
                     @if($isTransfer)
-                    {{ $trx->rekening->name_rek ?? '-' }}
+
+                    {{ $trx->rekening_nama
+                    ?? optional($trx->rekening)->name_rek
+                    ?? '-' }}
+
                     →
-                    {{ $trx->rekeningTujuan->name_rek ?? '-' }}
+
+                    {{ $trx->rekening_tujuan_nama
+                    ?? optional($trx->rekeningTujuan)->name_rek
+                    ?? '-' }}
+
                     @else
-                    {{ $trx->departemen->name_dep ?? '-' }}
+
+                    {{ $trx->departemen_nama
+                    ?? optional($trx->departemen)->name_dep
+                    ?? '-' }}
+
                     •
-                    {{ $trx->program->name_prog ?? '-' }}
+
+                    {{ $trx->program_nama
+                    ?? optional($trx->program)->name_prog
+                    ?? '-' }}
+
                     @endif
                 </small>
             </div>
 
         </div>
 
-        {{-- RIGHT --}}
         <div class="text-end">
 
             <div class="modern-amount
@@ -162,7 +142,7 @@ $isTransfer = $trx->type_transaksi === 'transfer';
                 @if($isTransfer)
                 Internal Transfer
                 @else
-                {{ $trx->rekening->name_rek ?? '-' }}
+                {{ $trx->rekening_nama ?? '-' }}
                 @endif
             </div>
 
@@ -212,7 +192,7 @@ $isTransfer = $trx->type_transaksi === 'transfer';
                             Transfer
                         </button>
                     </li>
-                    <li class="nav-item">
+                    {{-- <li class="nav-item">
                         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#utang">
                             Utang
                         </button>
@@ -221,7 +201,7 @@ $isTransfer = $trx->type_transaksi === 'transfer';
                         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#piutang">
                             Piutang
                         </button>
-                    </li>
+                    </li> --}}
                 </ul>
 
                 <div class="tab-content pt-3">
@@ -248,13 +228,13 @@ $isTransfer = $trx->type_transaksi === 'transfer';
 
                     {{-- Transfer --}}
                     <div class="tab-pane fade" id="transfer">
-                        <form method="POST" action="{{ route('transaksi.store') }}">
+                        <form method="POST" action="{{ route('transaksi.store') }}" enctype="multipart/form-data">
                             @csrf
                             <input type="hidden" name="type_transaksi" value="transfer">
 
                             <div class="mb-3">
                                 <label class="form-label">Rekening Asal</label>
-                                <select name="rekening_id" id="rekeningAsal" class="form-select" required>
+                                <select name="rekening_id" class="form-select" required>
                                     <option value="">-- Pilih Rekening Asal --</option>
                                     @foreach($rekenings as $rek)
                                     <option value="{{ $rek->id }}">
@@ -267,7 +247,7 @@ $isTransfer = $trx->type_transaksi === 'transfer';
 
                             <div class="mb-3">
                                 <label class="form-label">Rekening Tujuan</label>
-                                <select name="rekening_tujuan_id" id="rekeningTujuan" class="form-select" required>
+                                <select name="rekening_tujuan_id" class="form-select" required>
                                     <option value="">-- Pilih Rekening Tujuan --</option>
                                     @foreach($rekenings as $rek)
                                     <option value="{{ $rek->id }}">
@@ -289,12 +269,21 @@ $isTransfer = $trx->type_transaksi === 'transfer';
                                 <textarea name="keterangan" class="form-control"></textarea>
                             </div>
 
+                            {{-- Upload Bukti --}}
+                            <div class="mb-3">
+                                <label class="form-label">Upload Bukti Transfer</label>
+                                <input type="file" name="bukti_nota" class="form-control" accept="image/*,.pdf">
+                                <small class="text-muted">
+                                    Format: JPG, PNG, PDF (Max 2MB)
+                                </small>
+                            </div>
+
                             <button class="btn btn-primary mt-2">Simpan Transfer</button>
                         </form>
                     </div>
 
                     {{-- Utang --}}
-                    <div class="tab-pane fade" id="utang">
+                    {{-- <div class="tab-pane fade" id="utang">
                         <form method="POST" action="{{ route('transaksi.store') }}">
                             @csrf
                             <input type="hidden" name="type_transaksi" value="utang">
@@ -311,10 +300,10 @@ $isTransfer = $trx->type_transaksi === 'transfer';
 
                             <button class="btn btn-primary mt-2">Simpan Utang</button>
                         </form>
-                    </div>
+                    </div> --}}
 
                     {{-- Piutang --}}
-                    <div class="tab-pane fade" id="piutang">
+                    {{-- <div class="tab-pane fade" id="piutang">
                         <form method="POST" action="{{ route('transaksi.store') }}">
                             @csrf
                             <input type="hidden" name="type_transaksi" value="piutang">
@@ -331,7 +320,7 @@ $isTransfer = $trx->type_transaksi === 'transfer';
 
                             <button class="btn btn-primary mt-2">Simpan Piutang</button>
                         </form>
-                    </div>
+                    </div> --}}
 
                 </div>
 
@@ -355,42 +344,5 @@ $isTransfer = $trx->type_transaksi === 'transfer';
         </div>
     </div>
 </div>
-
-<script>
-    function openImagePreview(src) {
-    const overlay = document.getElementById('imagePreviewOverlay');
-    const img = document.getElementById('previewImage');
-
-    img.src = src;
-    overlay.style.display = 'flex';
-
-    setTimeout(() => {
-        overlay.classList.add('show');
-    }, 10);
-
-    document.body.style.overflow = 'hidden';
-}
-
-function closeImagePreview() {
-    const overlay = document.getElementById('imagePreviewOverlay');
-
-    overlay.classList.remove('show');
-    overlay.classList.add('closing');
-
-    setTimeout(() => {
-        overlay.classList.remove('closing');
-        overlay.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }, 250);
-}
-
-// klik background untuk close
-document.getElementById('imagePreviewOverlay')
-    .addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeImagePreview();
-        }
-});
-</script>
 
 @endsection

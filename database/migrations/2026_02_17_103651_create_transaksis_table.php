@@ -36,6 +36,13 @@ return new class extends Migration
             // TANGGAL TRANSAKSI
             $table->date('tgl_transaksi');
 
+            $table->string('user_nama')->nullable();
+
+            $table->string('rekening_nama')->nullable();
+            $table->string('rekening_tujuan_nama')->nullable();
+
+            $table->string('departemen_nama')->nullable();
+            $table->string('program_nama')->nullable();
             /*
             |--------------------------------------------------------------------------
             | RELASI
@@ -43,13 +50,14 @@ return new class extends Migration
             */
 
             $table->foreignId('user_id')
+                ->nullable()
                 ->constrained()
-                ->cascadeOnDelete();
+                ->nullOnDelete();
 
-            // Rekening asal
             $table->foreignId('rekening_id')
+                ->nullable()
                 ->constrained('rekenings')
-                ->cascadeOnDelete();
+                ->nullOnDelete();
 
             // Rekening tujuan (hanya untuk transfer)
             $table->foreignId('rekening_tujuan_id')
@@ -65,11 +73,6 @@ return new class extends Migration
             $table->foreignId('program_id')
                 ->nullable()
                 ->constrained('programs')
-                ->nullOnDelete();
-
-            $table->foreignId('kategori_id')
-                ->nullable()
-                ->constrained('kategoris')
                 ->nullOnDelete();
 
             $table->timestamps();

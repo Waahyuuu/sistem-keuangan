@@ -13,8 +13,19 @@ return new class extends Migration
     {
         Schema::create('kategori_transaksi', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('transaksi_id')->constrained()->onDelete('cascade');
-            $table->foreignId('kategori_id')->constrained()->onDelete('cascade');
+
+            $table->foreignId('transaksi_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            $table->foreignId('kategori_id')
+                ->nullable()
+                ->constrained('kategoris')
+                ->nullOnDelete();
+
+            $table->string('kategori_nama')->nullable();
+            $table->string('kategori_color')->nullable();
+
             $table->timestamps();
         });
     }

@@ -32,6 +32,12 @@ class Transaksi extends Model
         'rekening_tujuan_id',
         'departemen_id',
         'program_id',
+
+        'user_nama',
+        'rekening_nama',
+        'rekening_tujuan_nama',
+        'departemen_nama',
+        'program_nama',
     ];
 
     protected $casts = [
@@ -72,7 +78,14 @@ class Transaksi extends Model
 
     public function kategoris()
     {
-        return $this->belongsToMany(Kategori::class, 'kategori_transaksi');
+        return $this->belongsToMany(Kategori::class, 'kategori_transaksi')
+            ->withPivot('kategori_nama', 'kategori_color')
+            ->withTimestamps();
+    }
+
+    public function kategoriSnapshots()
+    {
+        return $this->hasMany(KategoriTransaksi::class);
     }
 
     /*

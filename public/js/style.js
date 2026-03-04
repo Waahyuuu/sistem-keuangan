@@ -47,14 +47,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     /* ===========================
-       TOAST
-    ============================ */
-    document.querySelectorAll(".show-auto").forEach(function (toastEl) {
-        const toast = new bootstrap.Toast(toastEl, { delay: 2000 });
-        toast.show();
-    });
-
-    /* ===========================
    TAMBAH PROGRAM
 ============================ */
     const parentSelect = document.getElementById("departemenSelect");

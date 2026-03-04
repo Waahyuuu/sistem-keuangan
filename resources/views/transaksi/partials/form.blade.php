@@ -1,7 +1,3 @@
-@php
-$departemensList = $departemensUser ?? [];
-@endphp
-
 <div class="mb-3">
     <label class="form-label">Rekening</label>
     <select name="rekening_id" class="form-select" required>
@@ -19,7 +15,7 @@ $departemensList = $departemensUser ?? [];
     <label class="form-label">Departemen</label>
     <select name="departemen_id" class="form-select" required>
         <option value="">-- Pilih Departemen --</option>
-        @foreach($departemensList as $dep)
+        @foreach($departemensUser ?? [] as $dep)
         <option value="{{ $dep->id }}">
             {{ $dep->name_dep }}
         </option>
