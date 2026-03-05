@@ -117,6 +117,13 @@ class DashboardController extends Controller
         $dataPemasukan   = array_values($dataPemasukan);
         $dataPengeluaran = array_values($dataPengeluaran);
 
+        // ==============================
+        // TRANSAKSI TERBARU
+        // ==============================
+        $transaksiTerbaru = Transaksi::latest()
+            ->take(4)
+            ->get();
+
         return view('dashboard', compact(
             'rekenings',
             'totalSaldo',
@@ -129,7 +136,8 @@ class DashboardController extends Controller
             'selectedDepartemen',
             'departemens',
             'dataPemasukan',
-            'dataPengeluaran'
+            'dataPengeluaran',
+            'transaksiTerbaru'
         ));
     }
 }

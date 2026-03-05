@@ -70,11 +70,11 @@ class TransaksiController extends Controller
             case Transaksi::TYPE_TRANSFER:
                 return $this->storeTransfer($request);
 
-            // case Transaksi::TYPE_UTANG:
-            //     return $this->storeUtang($request);
+                // case Transaksi::TYPE_UTANG:
+                //     return $this->storeUtang($request);
 
-            // case Transaksi::TYPE_PIUTANG:
-            //     return $this->storePiutang($request);
+                // case Transaksi::TYPE_PIUTANG:
+                //     return $this->storePiutang($request);
 
             default:
                 abort(400, 'Tipe transaksi tidak valid');
@@ -96,6 +96,7 @@ class TransaksiController extends Controller
             'program_id'        => 'nullable|exists:programs,id',
             'kategori_id'       => 'nullable|array',
             'kategori_id.*'     => 'exists:kategoris,id',
+            'tgl_transaksi'     => 'required|date|before_or_equal:today',
             'bukti_nota'        => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
         ]);
 
@@ -115,20 +116,15 @@ class TransaksiController extends Controller
                 'type_transaksi'    => Transaksi::TYPE_PEMASUKAN,
                 'nominal_transaksi' => $request->nominal_transaksi,
                 'keterangan'        => $request->keterangan,
-                'tgl_transaksi'     => now(),
-
+                'tgl_transaksi' => $request->tgl_transaksi,
                 'user_id'   => Auth::id(),
                 'user_nama' => Auth::user()->name,
-
                 'rekening_id'   => $rekening->id,
                 'rekening_nama' => $rekening->name_rek,
-
                 'departemen_id'   => $departemen->id,
                 'departemen_nama' => $departemen->name_dep,
-
                 'program_id'   => $program?->id,
                 'program_nama' => $program?->name_prog,
-
                 'bukti_nota' => $filePath
             ]);
 
@@ -170,6 +166,7 @@ class TransaksiController extends Controller
             'program_id'        => 'nullable|exists:programs,id',
             'kategori_id'       => 'nullable|array',
             'kategori_id.*'     => 'exists:kategoris,id',
+            'tgl_transaksi'     => 'required|date|before_or_equal:today',
             'bukti_nota'        => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
         ]);
 
@@ -194,20 +191,15 @@ class TransaksiController extends Controller
                 'type_transaksi'    => Transaksi::TYPE_PENGELUARAN,
                 'nominal_transaksi' => $request->nominal_transaksi,
                 'keterangan'        => $request->keterangan,
-                'tgl_transaksi'     => now(),
-
+                'tgl_transaksi' => $request->tgl_transaksi,
                 'user_id'   => Auth::id(),
                 'user_nama' => Auth::user()->name,
-
                 'rekening_id'   => $rekening->id,
                 'rekening_nama' => $rekening->name_rek,
-
                 'departemen_id'   => $departemen->id,
                 'departemen_nama' => $departemen->name_dep,
-
                 'program_id'   => $program?->id,
                 'program_nama' => $program?->name_prog,
-
                 'bukti_nota' => $filePath
             ]);
 
@@ -247,6 +239,7 @@ class TransaksiController extends Controller
             'rekening_tujuan_id' => 'required|exists:rekenings,id|different:rekening_id',
             'nominal_transaksi'  => 'required|numeric|min:1',
             'keterangan'         => 'nullable|string',
+            'tgl_transaksi' => 'required|date|before_or_equal:today',
             'bukti_nota'         => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
         ]);
 
@@ -265,17 +258,13 @@ class TransaksiController extends Controller
                 'type_transaksi'     => Transaksi::TYPE_TRANSFER,
                 'nominal_transaksi'  => $request->nominal_transaksi,
                 'keterangan'         => $request->keterangan,
-                'tgl_transaksi'      => now(),
-
+                'tgl_transaksi' => $request->tgl_transaksi,
                 'user_id'   => Auth::id(),
                 'user_nama' => Auth::user()->name,
-
                 'rekening_id'   => $from->id,
                 'rekening_nama' => $from->name_rek,
-
                 'rekening_tujuan_id'   => $to->id,
                 'rekening_tujuan_nama' => $to->name_rek,
-
                 'bukti_nota' => $filePath
             ]);
         });

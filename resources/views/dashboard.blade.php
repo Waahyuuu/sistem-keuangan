@@ -92,7 +92,7 @@
 {{-- SALDO REKENING --}}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h5 class="fw-bold">Saldo Rekening</h5>
-    <a href="master-data?tab=rekening" class="fw-semibold text-primary text-decoration-none">
+    <a href="master-data?tab=rekening" class="fw-semibold text-primary text-decoration-none small">
         Lihat Semua
     </a>
 </div>
@@ -148,7 +148,13 @@
 </div>
 
 {{-- ANALITIK ARUS KAS --}}
-<div class="card mt-5 p-4 rounded-4 shadow-sm">
+<div class="mt-5 p-4 rounded-4 shadow-sm position-relative bg-white">
+
+    <!-- LOADING -->
+    <div id="chartLoading" class="chart-loading d-none">
+        <div class="spinner-border text-primary"></div>
+        <span class="ms-2">Memuat data...</span>
+    </div>
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -158,11 +164,11 @@
             </small>
         </div>
 
-        <form method="GET" class="d-flex gap-2">
+        <form method="GET" id="filterForm" class="d-flex gap-2">
 
             {{-- DEPARTEMEN --}}
             <select name="departemen" class="form-select">
-                <option value="all">Semua Departemen</option>
+                <option value="all">All</option>
                 @foreach($departemens as $dep)
                 <option value="{{ $dep->id }}" {{ $selectedDepartemen==$dep->id ? 'selected' : '' }}>
                     {{ $dep->name_dep }}
@@ -179,11 +185,74 @@
                 @endforeach
             </select>
 
-            <button class="btn btn-primary">Filter</button>
         </form>
     </div>
 
-    <canvas id="arusKasChart" height="300"></canvas>
+    <canvas id="arusKasChart" height="90"></canvas>
+</div>
+
+{{-- TRANSAKSI TERBARU --}}
+<div class="transaksi-card mt-4">
+
+    {{-- HEADER --}}
+    <div class="transaksi-header">
+        <h5>Transaksi Terbaru</h5>
+
+        <a class="fw-semibold text-primary text-decoration-none small" href="{{ route('transaksi.index') }}">
+            Lihat Semua
+        </a>
+    </div>
+
+    {{-- TABLE HEADER --}}
+    <div class="transaksi-table-header">
+        <span>Keterangan</span>
+        <span>Nominal</span>
+    </div>
+
+    {{-- LIST TRANSAKSI --}}
+    @forelse($transaksiTerbaru as $trx)
+
+    <div class="transaksi-item">
+
+        <div class="trx-left">
+
+            <div class="trx-icon
+                {{ $trx->type_transaksi == 'pemasukan' ? 'icon-masuk' : 'icon-keluar' }}">
+
+                <i class="bi 
+                {{ $trx->type_transaksi == 'pemasukan' ? 'bi-arrow-down-left' : 'bi-arrow-up-right' }}">
+                </i>
+
+            </div>
+
+            <div>
+                <div class="trx-title">
+                    {{ \Illuminate\Support\Str::limit($trx->keterangan,30) }}
+                </div>
+
+                <small>
+                    {{ $trx->created_at->format('d M, H:i') }}
+                </small>
+            </div>
+
+        </div>
+
+        <div class="trx-nominal
+            {{ $trx->type_transaksi == 'pemasukan' ? 'text-success' : 'text-danger' }}">
+
+            {{ $trx->type_transaksi == 'pemasukan' ? '+' : '-' }}
+            Rp {{ number_format($trx->nominal_transaksi,0,',','.') }}
+
+        </div>
+
+    </div>
+
+    @empty
+    <div class="p-4 text-center text-muted">
+        Belum ada transaksi
+    </div>
+    @endforelse
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -237,6 +306,24 @@ new Chart(ctx, {
             }
         }
     }
+});
+
+const filterForm = document.getElementById('filterForm');
+const selects = filterForm.querySelectorAll('select');
+const loading = document.getElementById('chartLoading');
+
+selects.forEach(select => {
+
+    select.addEventListener('change', () => {
+
+        loading.classList.remove('d-none');
+
+        setTimeout(() => {
+            filterForm.submit();
+        }, 200);
+
+    });
+
 });
 </script>
 @endsection

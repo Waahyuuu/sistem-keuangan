@@ -56,5 +56,18 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     // Preview Images End
 
+    // reload rekening
+    const filterForm = document.getElementById("filterForm");
+    const tanggalInput = filterForm.querySelector('input[name="tanggal"]');
+    const loading = document.getElementById("loading");
+
+    tanggalInput.addEventListener("change", function () {
+        loading.classList.remove("d-none");
+
+        setTimeout(() => {
+            filterForm.submit();
+        }, 200);
+    });
+
     // Tempat Semua Script Component End
 });

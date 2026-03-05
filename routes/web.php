@@ -184,6 +184,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/pengaturan-akun', [ProfileController::class, 'index'])
         ->name('pengaturan');
 
+    Route::post('/pengaturan-akun/store', [ProfileController::class, 'store'])
+        ->name('pengguna.store');
+
+    Route::put('/pengaturan-akun/{id}/update', [ProfileController::class, 'update'])
+        ->name('pengguna.update');
+
     /*
     |--------------------------------------------------------------------------
     | PENGATURAN TOGGLE AKTIF/NON-AKTIF

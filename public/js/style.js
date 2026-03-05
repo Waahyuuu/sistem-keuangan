@@ -224,15 +224,20 @@ document.addEventListener("DOMContentLoaded", function () {
     /* ===========================
        FILTER REKENING ASAL-TUJUAN
     ============================ */
-    const asal = document.getElementById("rekeningAsal");
-    const tujuan = document.getElementById("rekeningTujuan");
+    const asal = document.getElementById("rekening_asal");
+    const tujuan = document.getElementById("rekening_tujuan");
 
     if (asal && tujuan) {
         asal.addEventListener("change", function () {
+            // reset semua option
             Array.from(tujuan.options).forEach((option) => {
                 option.disabled = false;
             });
 
+            // reset pilihan tujuan
+            tujuan.value = "";
+
+            // disable yang sama dengan asal
             if (this.value !== "") {
                 const option = tujuan.querySelector(
                     `option[value="${this.value}"]`,

@@ -8,16 +8,18 @@
     <h3 class="mb-4">Transaksi</h3>
 </div>
 
-<form method="GET" class="mb-3 d-flex gap-2 align-items-center">
-    <input type="date" name="tanggal" value="{{ $tanggal }}" class="form-control" style="max-width:200px;">
+<form method="GET" id="filterForm" class="mb-3 d-flex gap-2 align-items-center">
 
-    <button class="btn btn-primary">
-        Filter
-    </button>
+    <input type="date" name="tanggal" value="{{ $tanggal }}" class="form-control" style="max-width:200px;">
 
     <a href="{{ route('transaksi.index') }}" class="btn btn-secondary">
         Hari Ini
     </a>
+
+    <span id="loading" class="ms-2 d-none">
+        <div class="spinner-border spinner-border-sm text-primary"></div>
+    </span>
+
 </form>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -233,8 +235,17 @@ $isTransfer = $trx->type_transaksi === 'transfer';
                             <input type="hidden" name="type_transaksi" value="transfer">
 
                             <div class="mb-3">
+                                <label class="form-label">Tanggal Transaksi</label>
+                                <input type="date" name="tgl_transaksi" class="form-control" value="{{ date('Y-m-d') }}"
+                                    max="{{ date('Y-m-d') }}" required>
+                                <small class="text-muted">
+                                    Tidak boleh melebihi hari ini
+                                </small>
+                            </div>
+
+                            <div class="mb-3">
                                 <label class="form-label">Rekening Asal</label>
-                                <select name="rekening_id" class="form-select" required>
+                                <select name="rekening_id" id="rekening_asal" class="form-select" required>
                                     <option value="">-- Pilih Rekening Asal --</option>
                                     @foreach($rekenings as $rek)
                                     <option value="{{ $rek->id }}">
@@ -247,7 +258,7 @@ $isTransfer = $trx->type_transaksi === 'transfer';
 
                             <div class="mb-3">
                                 <label class="form-label">Rekening Tujuan</label>
-                                <select name="rekening_tujuan_id" class="form-select" required>
+                                <select name="rekening_tujuan_id" id="rekening_tujuan" class="form-select" required>
                                     <option value="">-- Pilih Rekening Tujuan --</option>
                                     @foreach($rekenings as $rek)
                                     <option value="{{ $rek->id }}">

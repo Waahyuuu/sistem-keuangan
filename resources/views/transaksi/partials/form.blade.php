@@ -1,4 +1,12 @@
 <div class="mb-3">
+    <label class="form-label">Tanggal Transaksi</label>
+    <input type="date" name="tgl_transaksi" class="form-control" max="{{ date('Y-m-d') }}" required>
+    <small class="text-muted">
+        Tidak boleh melebihi hari ini
+    </small>
+</div>
+
+<div class="mb-3">
     <label class="form-label">Rekening</label>
     <select name="rekening_id" class="form-select" required>
         <option value="">-- Pilih Rekening --</option>
