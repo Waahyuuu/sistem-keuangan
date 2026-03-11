@@ -198,7 +198,6 @@ $selectedParentId = $prog->departemen->parent_id
 </div>
 @endforeach
 
-
 {{-- Kirim data ke JS --}}
 <script>
     window.departemensData = @json($departemens);

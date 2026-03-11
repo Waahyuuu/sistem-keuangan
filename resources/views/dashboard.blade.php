@@ -309,21 +309,28 @@ new Chart(ctx, {
 });
 
 const filterForm = document.getElementById('filterForm');
-const selects = filterForm.querySelectorAll('select');
-const loading = document.getElementById('chartLoading');
 
-selects.forEach(select => {
+if (filterForm) {
 
-    select.addEventListener('change', () => {
+    const selects = filterForm.querySelectorAll('select');
+    const loading = document.getElementById('chartLoading');
 
-        loading.classList.remove('d-none');
+    selects.forEach(select => {
 
-        setTimeout(() => {
-            filterForm.submit();
-        }, 200);
+        select.addEventListener('change', () => {
+
+            if (loading) {
+                loading.classList.remove('d-none');
+            }
+
+            setTimeout(() => {
+                filterForm.submit();
+            }, 200);
+
+        });
 
     });
 
-});
+}
 </script>
 @endsection

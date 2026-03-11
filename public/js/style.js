@@ -155,14 +155,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    /* ===========================
-       AUTO LOGOUT (2 JAM)
-    ============================ */
-    setTimeout(function () {
-        alert("Sesi anda telah habis (2 jam). Silakan login kembali.");
-        document.getElementById("logout-form")?.submit();
-    }, 7200000);
-
     /*
     |--------------------------------------------------------------------------
     | DETAIL MODAL FETCH
@@ -246,4 +238,50 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }
+
+    // timer
+    const totalSession = 7200; // 2 jam
+    const loginTime = window.loginTime;
+
+    function updateTimer() {
+        if (!loginTime) return;
+
+        const start = Date.parse(loginTime);
+        const now = Date.now();
+
+        const elapsed = Math.floor((now - start) / 1000);
+        const remaining = totalSession - elapsed;
+
+        if (remaining <= 0) {
+            document.getElementById("logout-form")?.submit();
+            return;
+        }
+
+        const h = Math.floor(remaining / 3600);
+        const m = Math.floor((remaining % 3600) / 60);
+        const s = remaining % 60;
+
+        const timer = document.getElementById("session-timer");
+
+        if (timer) {
+            timer.innerText =
+                String(h).padStart(2, "0") +
+                ":" +
+                String(m).padStart(2, "0") +
+                ":" +
+                String(s).padStart(2, "0");
+
+            timer.style.visibility = "visible";
+        }
+
+        const progress = document.getElementById("session-progress");
+
+        if (progress) {
+            const percent = (remaining / totalSession) * 100;
+            progress.style.width = percent + "%";
+        }
+    }
+
+    setInterval(updateTimer, 1000);
+    updateTimer();
 });

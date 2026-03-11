@@ -10,7 +10,6 @@
         @endif
     </title>
 
-    {{-- meta --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Bootstrap CSS -->
@@ -34,7 +33,7 @@
         @include('layouts.sidebar')
 
         {{-- Content --}}
-        <div class="flex-fill p-4">
+        <div class="flex-fill p-4 main-content">
             <div class="content-wrapper">
                 @yield('content')
             </div>
@@ -42,6 +41,10 @@
 
     </div>
 
+    <script>
+        window.loginTime = "{{ session('login_time') ? \Carbon\Carbon::parse(session('login_time'))->toIso8601String() : '' }}";
+    </script>
+    
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 

@@ -243,7 +243,7 @@
                     <div class="mb-3">
                         <label>Role</label>
 
-                        <select name="role" class="form-control">
+                        <select name="role" id="roleSelect" class="form-control">
 
                             <option value="admin">Admin</option>
                             <option value="operator">Operator</option>
@@ -254,11 +254,12 @@
                     </div>
 
 
-                    <div class="mb-3">
+                    {{-- KANTOR --}}
+                    <div class="mb-3" id="kantorField">
 
                         <label>Kantor</label>
 
-                        <select name="kantor_id" class="form-control">
+                        <select name="kantor_id" id="kantorSelect" class="form-control">
 
                             <option value="">-- Pilih Kantor --</option>
 
@@ -275,7 +276,8 @@
                     </div>
 
 
-                    <div class="mb-3">
+                    {{-- DEPARTEMEN --}}
+                    <div class="mb-3" id="departemenField">
 
                         <label>Departemen</label>
 
@@ -315,5 +317,49 @@
     </div>
 
 </div>
+
+<script>
+    function toggleForm(){
+
+    let role = document.getElementById("roleSelect").value
+    let kantor = document.getElementById("kantorField")
+    let departemen = document.getElementById("departemenField")
+    let kantorValue = document.getElementById("kantorSelect").value
+
+    if(role === "admin"){
+        kantor.style.display = "none"
+        departemen.style.display = "none"
+    }
+
+    else if(role === "operator"){
+        kantor.style.display = "block"
+
+        if(kantorValue === ""){
+            departemen.style.display = "none"
+        }else{
+            departemen.style.display = "block"
+        }
+    }
+
+    else if(role === "user"){
+
+        kantor.style.display = "block"
+
+        if(kantorValue === ""){
+            departemen.style.display = "none"
+        }else{
+            departemen.style.display = "block"
+        }
+
+    }
+
+}
+
+document.getElementById("roleSelect").addEventListener("change", toggleForm)
+document.getElementById("kantorSelect").addEventListener("change", toggleForm)
+
+document.addEventListener("DOMContentLoaded", toggleForm)
+
+</script>
 
 @endsection

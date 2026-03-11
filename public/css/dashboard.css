@@ -139,84 +139,94 @@
 
 /* Transaksi */
 /* CARD */
-.transaksi-card{
-    background:#fff;
-    border-radius:20px;
-    overflow:hidden;
-    box-shadow:0 2px 10px rgba(0,0,0,0.05);
+.transaksi-card {
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 /* HEADER */
-.transaksi-header{
-    background:#ffffff;
-    padding:18px 24px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+.transaksi-header {
+    background: #ffffff;
+    padding: 18px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.transaksi-header h5{
-    font-weight:700;
-    margin:0;
+.transaksi-header h5 {
+    font-weight: 700;
+    margin: 0;
 }
 
-.transaksi-header a{
-    color:#2563eb;
-    font-weight:600;
-    text-decoration:none;
+.transaksi-header a {
+    color: #2563eb;
+    font-weight: 600;
+    text-decoration: none;
 }
 
 /* TABLE HEADER */
-.transaksi-table-header{
-    background:#e5e7eb;
-    padding:12px 24px;
-    display:flex;
-    justify-content:space-between;
-    font-weight:600;
-    color:#6b7280;
+.transaksi-table-header {
+    background: #e5e7eb;
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+    color: #6b7280;
 }
 
 /* ITEM */
-.transaksi-item{
-    padding:18px 24px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    border-bottom:1px solid #f1f1f1;
+.transaksi-item {
+    padding: 18px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f1f1f1;
 }
 
-.trx-left{
-    display:flex;
-    align-items:center;
-    gap:12px;
+.trx-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 /* ICON */
-.trx-icon{
-    width:40px;
-    height:40px;
-    border-radius:50%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:18px;
+.trx-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
 }
 
-.icon-masuk{
-    background:#e7f7ed;
-    color:#16a34a;
+.icon-masuk {
+    background: #e7f7ed;
+    color: #16a34a;
 }
 
-.icon-keluar{
-    background:#fdecec;
-    color:#dc2626;
+.icon-keluar {
+    background: #fdecec;
+    color: #dc2626;
 }
 
-.trx-title{
-    font-weight:600;
+.trx-title {
+    font-weight: 600;
 }
 
-.trx-nominal{
-    font-weight:700;
-    font-size:16px;
+.trx-nominal {
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.sidebar-fixed{
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 260px;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 1000;
 }

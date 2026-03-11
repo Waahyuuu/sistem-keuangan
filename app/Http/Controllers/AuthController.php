@@ -20,7 +20,11 @@ class AuthController extends Controller
         ]);
 
         if (Auth::attempt($credentials)) {
+
             $request->session()->regenerate();
+
+            session(['login_time' => now()]);
+
             return redirect()->route('dashboard');
         }
 

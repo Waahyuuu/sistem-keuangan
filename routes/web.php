@@ -6,7 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\LaporanController;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -181,14 +181,9 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/pengaturan-akun', [ProfileController::class, 'index'])
-        ->name('pengaturan');
-
-    Route::post('/pengaturan-akun/store', [ProfileController::class, 'store'])
-        ->name('pengguna.store');
-
-    Route::put('/pengaturan-akun/{id}/update', [ProfileController::class, 'update'])
-        ->name('pengguna.update');
+    Route::get('/pengaturan-akun', [UserController::class, 'index'])->name('pengguna.index');
+    Route::post('/pengaturan-akun', [UserController::class, 'store'])->name('pengguna.store');
+    Route::put('/pengaturan-akun/{id}', [UserController::class, 'update'])->name('pengguna.update');
 
     /*
     |--------------------------------------------------------------------------
